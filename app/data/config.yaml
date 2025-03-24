@@ -1,0 +1,6 @@
+formato_data: DD/MM/YYYY
+inflacao_anual: 0.045
+moeda: BRL
+notificacoes: true
+primeiro_uso: false
+tema: light

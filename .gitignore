@@ -1,0 +1,107 @@
+# Dados do usuário e backups
+data/user/*
+*.json
+backup/
+
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+.env
+
+# Distribuição / empacotamento
+dist/
+build/
+*.egg-info/
+
+# Logs e dados temporários
+*.log
+logs/
+tmp/
+.DS_Store
+
+# IDE / Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Exceções - dados de exemplo devem ser incluídos
+!app/data/sample/*.json
+
+# Arquivos de dados locais
+app/data/local/*.json
+app/data/local/*.yaml
+app/data/local/*.yml
+app/data/local/*.sqlite
+app/data/backup/*
+
+# Arquivos gerados pelo Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambiente virtual
+venv/
+ENV/
+env/
+.venv/
+.env/
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.spyderproject
+.spyproject
+.ropeproject
+*.sublime-workspace
+*.sublime-project
+
+# Arquivos de log
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+.temp/
+tmp/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Arquivos de configuração sensíveis
+.env
+.streamlit/secrets.toml 
