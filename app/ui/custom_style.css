@@ -27,6 +27,11 @@ body, .main, div.stApp, [data-testid="stAppViewContainer"], [data-testid="stAppV
   margin: 0 !important;
 }
 
+/* Aplicar fundo cinza a todo o conteúdo principal */
+[data-testid="stAppViewBlockContainer"], div.block-container, [data-testid="stVerticalBlock"] {
+  background-color: var(--secondary) !important;
+}
+
 [data-testid="stSidebarContent"] {
   background-color: var(--primary) !important;
   border-right: 1px solid var(--primary-dark) !important;
@@ -53,11 +58,28 @@ div [data-testid="stSidebarUserContent"] > div:first-child {
   color: var(--text-light) !important;
 }
 
+/* Melhorar a área do logo e cabeçalho do sidebar */
+.sidebar-header {
+  padding: 20px 10px !important;
+  text-align: center !important;
+  background-color: var(--primary-dark) !important;
+  color: white !important;
+  margin-bottom: 20px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+.sidebar-logo {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+  color: white !important;
+}
+
 /* Botões da Sidebar */
 div.stButton button {
-  background: rgba(255,255,255,0.1) !important;
+  background: rgba(255,255,255,0.15) !important;
   color: var(--text-light) !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
   border-radius: 8px !important;
   padding: 10px 18px !important;
   font-weight: 600 !important;
@@ -68,10 +90,11 @@ div.stButton button {
   display: flex !important;
   align-items: center !important;
   box-shadow: none !important;
+  letter-spacing: 0.5px !important;
 }
 
 div.stButton button:hover {
-  background: rgba(255,255,255,0.2) !important;
+  background: rgba(255,255,255,0.25) !important;
   color: var(--text-light) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
@@ -487,6 +510,25 @@ table tr:hover {
   background-color: var(--primary) !important;
   border-right: 1px solid var(--primary-dark) !important;
   box-shadow: 2px 0 5px rgba(0,0,0,0.05) !important;
+}
+
+/* Melhorar a legibilidade do texto no sidebar */
+[data-testid="stSidebarUserContent"] p, 
+[data-testid="stSidebarUserContent"] span,
+[data-testid="stSidebarUserContent"] div {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-testid="stSidebarUserContent"] h1,
+[data-testid="stSidebarUserContent"] h2,
+[data-testid="stSidebarUserContent"] h3 {
+  color: white !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Estilização adicional para elementos do Streamlit */

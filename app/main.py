@@ -565,6 +565,70 @@ def configure_plotly_default_style(tema="claro"):
     pio.templates['Brauna'] = custom_template
     pio.templates.default = 'Brauna'
 
+def render_sidebar():
+    """
+    Renderiza a barra lateral com navegação
+    """
+    # Buscar as informações do usuário
+    user = get_current_user()
+    email = user.get('email', 'Usuário') if user else 'Usuário'
+    nome = user.get('nome', email.split('@')[0]) if user else 'Usuário'
+    
+    # Renderizar o cabeçalho da barra lateral com o logo
+    st.sidebar.markdown("""
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <img src="https://img.icons8.com/color/48/null/money-bag.png" style="width: 36px; height: 36px; margin-bottom: 8px;">
+            <div>Brauna Finanças</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Informações do usuário na barra lateral
+    st.sidebar.markdown(f"""
+    <div style="padding: 0 10px 20px 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; align-items: center;">
+            <div style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                <span style="font-size: 20px;">👤</span>
+            </div>
+            <div>
+                <div style="font-weight: 600; color: white; font-size: 14px;">{nome}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.7);">{email}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Botões de navegação
+    if st.sidebar.button("📊 Dashboard", key="nav_dashboard"):
+        set_pagina("dashboard")
+    
+    if st.sidebar.button("💸 Controle de Gastos", key="nav_gastos"):
+        set_pagina("gastos")
+    
+    if st.sidebar.button("📈 Investimentos", key="nav_investimentos"):
+        set_pagina("investimentos")
+    
+    if st.sidebar.button("🎯 Objetivos", key="nav_objetivos"):
+        set_pagina("objetivos")
+    
+    if st.sidebar.button("💳 Dívidas", key="nav_dividas"):
+        set_pagina("dividas")
+    
+    if st.sidebar.button("🔒 Seguros", key="nav_seguros"):
+        set_pagina("seguros")
+    
+    # Linha separadora
+    st.sidebar.markdown("<hr style='margin: 15px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+    
+    # Botões de configuração e logout
+    if st.sidebar.button("⚙️ Configurações", key="nav_settings"):
+        set_pagina("settings")
+    
+    if st.sidebar.button("🚪 Sair", key="nav_logout"):
+        logout()
+        st.rerun()
+
 def main():
     """
     Função principal que inicializa a aplicação
@@ -617,86 +681,8 @@ def main():
     # Inicializar dados de exemplo se for o primeiro uso (somente após autenticação)
     dados_inicializados = initialize_data()
     
-    # Sidebar para navegação
-    with st.sidebar:
-        # Logo e título do app
-        st.markdown(f"""
-        <div style="display: flex; align-items: center; padding: 0.5rem 1rem; margin-bottom: 1rem; background-color: var(--card-background); border-radius: 0.5rem; box-shadow: var(--shadow-sm);">
-            <div style="margin-right: 0.5rem;">
-                <span style="font-size: 2rem;">💰</span>
-            </div>
-            <div>
-                <h1 style="margin: 0; padding: 0; font-size: 1.8rem; color: var(--primary);">Brauna Finanças</h1>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Informações do usuário
-        user = get_current_user()
-        if user:
-            st.markdown(f"""
-            <div style="display: flex; align-items: center; padding: 0.5rem 1rem; margin-bottom: 1rem; background-color: var(--card-background); border-radius: 0.5rem; box-shadow: var(--shadow-sm);">
-                <div style="margin-right: 0.5rem;">
-                    <span style="font-size: 1.5rem;">👤</span>
-                </div>
-                <div>
-                    <p style="margin: 0; padding: 0; font-size: 0.9rem;">Olá, <strong>{user.get('nome', 'Usuário')}</strong></p>
-                    <p style="margin: 0; padding: 0; font-size: 0.8rem; color: var(--text-color-secondary);">{user.get('email', '')}</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Separador
-        st.markdown('<div style="height: 1px; background: var(--border-color); margin: 0.5rem 0 1.5rem 0;"></div>', unsafe_allow_html=True)
-        
-        # Botões de navegação simplificados
-        pagina_atual = st.session_state.pagina_atual
-        
-        # Definição de botões de navegação
-        nav_items = [
-            {"icon": "📊", "label": "Dashboard", "id": "dashboard"},
-            {"icon": "💸", "label": "Controle de Gastos", "id": "gastos"},
-            {"icon": "📈", "label": "Investimentos", "id": "investimentos"},
-            {"icon": "🎯", "label": "Objetivos", "id": "objetivos"},
-            {"icon": "💳", "label": "Dívidas", "id": "dividas"},
-            {"icon": "🔒", "label": "Seguros", "id": "seguros"},
-            {"icon": "⚙️", "label": "Configurações", "id": "config"}
-        ]
-        
-        # Renderizar botões
-        for item in nav_items:
-            is_active = pagina_atual == item["id"]
-            button_style = "primary" if is_active else "secondary"
-            
-            if st.button(
-                f"{item['icon']} {item['label']}", 
-                key=f"nav_{item['id']}",
-                type=button_style,
-                use_container_width=True
-            ):
-                set_pagina(item["id"])
-        
-        # Separador antes das configurações
-        st.markdown('<div style="height: 1px; background: var(--border-color); margin: 1.5rem 0;"></div>', unsafe_allow_html=True)
-        
-        # Botão de logout
-        if st.button("🚪 Sair", use_container_width=True, type="secondary"):
-            logout()
-            st.rerun()
-            
-        # Toggle para tema claro/escuro
-        tema_label = "🌙 Tema Escuro" if st.session_state.tema == "claro" else "☀️ Tema Claro"
-        if st.button(tema_label, use_container_width=True, type="secondary"):
-            toggle_tema()
-            st.rerun()
-        
-        # Rodapé
-        st.markdown("""
-        <div style="position: relative; bottom: 1rem; left: 0; right: 0; text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--text-color-secondary);">
-            <p style="margin: 0;">Brauna Finanças v1.0.0</p>
-            <p style="margin: 0;">© 2025 Brauna Finanças</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Renderizar barra lateral
+    render_sidebar()
     
     # Renderizar cabeçalho
     render_header()
@@ -724,7 +710,7 @@ def main():
         render_dividas_page()
     elif pagina_atual == "seguros":
         render_seguros_page()
-    elif pagina_atual == "config":
+    elif pagina_atual == "settings":
         render_settings_page()
     else:
         # Página padrão (dashboard) se algum erro ocorrer
