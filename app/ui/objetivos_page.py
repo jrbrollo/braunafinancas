@@ -377,6 +377,7 @@ def render_objetivos_page():
                         if st.button("✏️ Editar", key=f"edit_{obj.get('id')}"):
                             st.session_state.objetivo_para_editar = obj.get("id")
                             st.session_state.mostrar_form_edicao = True
+                            st.rerun()
                     
                     with col_acoes2:
                         if st.button("💰 Atualizar valor", key=f"update_{obj.get('id')}"):
@@ -390,8 +391,167 @@ def render_objetivos_page():
             
             # Formulário para edição de objetivo
             if "mostrar_form_edicao" in st.session_state and st.session_state.mostrar_form_edicao:
-                # Implementação do formulário de edição
-                pass
+                objetivo_id = st.session_state.objetivo_para_editar
+                objetivo = next((obj for obj in objetivos if obj.get("id") == objetivo_id), None)
+                
+                if objetivo:
+                    st.subheader(f"Editar objetivo: '{objetivo.get('nome')}'")
+                    
+                    with st.form("form_editar_objetivo"):
+                        nome = st.text_input(
+                            "Nome do objetivo", 
+                            value=objetivo.get("nome", ""),
+                            help="Ex: Comprar casa, Fazer intercâmbio, etc."
+                        )
+                        
+                        descricao = st.text_area(
+                            "Descrição (opcional)", 
+                            value=objetivo.get("descricao", ""),
+                            help="Detalhes sobre o objetivo"
+                        )
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            valor_total = st.number_input(
+                                "Valor total (R$)", 
+                                min_value=1.0, 
+                                value=float(objetivo.get("valor_total", 1000.0)),
+                                step=1000.0,
+                                format="%.2f",
+                                help="Quanto custa realizar este objetivo"
+                            )
+                        
+                        with col2:
+                            valor_atual = st.number_input(
+                                "Valor atual (R$)", 
+                                min_value=0.0, 
+                                max_value=valor_total,
+                                value=float(objetivo.get("valor_atual", 0.0)),
+                                step=100.0,
+                                format="%.2f",
+                                help="Quanto você já tem guardado para este objetivo"
+                            )
+                        
+                        col3, col4 = st.columns(2)
+                        with col3:
+                            categoria = st.selectbox(
+                                "Categoria",
+                                options=[
+                                    "imovel", "veiculo", "educacao", 
+                                    "viagem", "aposentadoria", "emergencia", "outros"
+                                ],
+                                index=["imovel", "veiculo", "educacao", "viagem", "aposentadoria", "emergencia", "outros"].index(
+                                    objetivo.get("categoria", "outros")
+                                ),
+                                format_func=lambda x: {
+                                    "imovel": "🏠 Imóvel",
+                                    "veiculo": "🚗 Veículo",
+                                    "educacao": "🎓 Educação",
+                                    "viagem": "✈️ Viagem",
+                                    "aposentadoria": "👵 Aposentadoria",
+                                    "emergencia": "🚨 Fundo de Emergência",
+                                    "outros": "📋 Outros"
+                                }.get(x, x)
+                            )
+                        
+                        with col4:
+                            prioridade_atual = objetivo.get("prioridade", 2)
+                            if isinstance(prioridade_atual, int):
+                                prioridade_str = "alta" if prioridade_atual == 1 else "media" if prioridade_atual == 2 else "baixa"
+                            else:
+                                prioridade_str = prioridade_atual
+                                
+                            prioridade = st.selectbox(
+                                "Prioridade",
+                                options=["alta", "media", "baixa"],
+                                index=["alta", "media", "baixa"].index(prioridade_str),
+                                format_func=lambda x: {
+                                    "alta": "🔴 Alta",
+                                    "media": "🟠 Média",
+                                    "baixa": "🟢 Baixa"
+                                }.get(x, x)
+                            )
+                        
+                        # Datas
+                        col5, col6 = st.columns(2)
+                        with col5:
+                            data_inicio = st.date_input(
+                                "Data de início", 
+                                value=datetime.strptime(objetivo.get("data_inicio", datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"),
+                                help="Quando você começou a poupar para este objetivo"
+                            )
+                        
+                        with col6:
+                            # Calcular a diferença entre as datas em anos
+                            data_alvo_atual = datetime.strptime(objetivo.get("data_alvo", ""), "%Y-%m-%d")
+                            data_inicio_atual = datetime.strptime(objetivo.get("data_inicio", ""), "%Y-%m-%d")
+                            anos_atuais = max(1, round((data_alvo_atual - data_inicio_atual).days / 365))
+                            
+                            anos_para_alvo = st.slider(
+                                "Anos para alcançar", 
+                                min_value=1, 
+                                max_value=30, 
+                                value=int(anos_atuais),
+                                help="Em quantos anos você pretende atingir este objetivo"
+                            )
+                            data_alvo = data_inicio + timedelta(days=365 * anos_para_alvo)
+                            st.write(f"Data alvo: {data_alvo.strftime('%d/%m/%Y')}")
+                        
+                        # Taxa de retorno estimada
+                        taxa_atual = objetivo.get("taxa_retorno", 0.05) * 100  # Converter de decimal para percentual
+                        taxa_retorno = st.slider(
+                            "Taxa de retorno anual estimada (%) - opcional", 
+                            min_value=0.0, 
+                            max_value=20.0, 
+                            value=float(taxa_atual),
+                            step=0.5,
+                            help="Estimativa inicial de rendimento. Será substituída pelos rendimentos reais dos investimentos vinculados."
+                        )
+                        
+                        # Manter os investimentos vinculados
+                        investimentos_vinculados = objetivo.get("investimentos_vinculados", [])
+                        
+                        # Botões de ação
+                        col_btn1, col_btn2 = st.columns(2)
+                        with col_btn1:
+                            atualizar = st.form_submit_button("💾 Salvar alterações", use_container_width=True)
+                        with col_btn2:
+                            cancelar = st.form_submit_button("❌ Cancelar", use_container_width=True)
+                        
+                        if atualizar:
+                            if not nome:
+                                st.error("O nome do objetivo é obrigatório.")
+                            elif valor_total <= 0:
+                                st.error("O valor total deve ser maior que zero.")
+                            else:
+                                # Atualizar objetivo
+                                objetivo_atualizado = {
+                                    "id": objetivo_id,
+                                    "nome": nome,
+                                    "descricao": descricao,
+                                    "valor_total": valor_total,
+                                    "valor_atual": valor_atual,
+                                    "categoria": categoria,
+                                    "prioridade": 1 if prioridade == "alta" else 2 if prioridade == "media" else 3,
+                                    "data_inicio": data_inicio.strftime("%Y-%m-%d"),
+                                    "data_alvo": data_alvo.strftime("%Y-%m-%d"),
+                                    "taxa_retorno": taxa_retorno / 100,  # Converter para decimal
+                                    "investimentos_vinculados": investimentos_vinculados
+                                }
+                                
+                                # Atualizar na lista
+                                objetivos = [objetivo_atualizado if obj.get("id") == objetivo_id else obj for obj in objetivos]
+                                
+                                if save_objetivos(objetivos):
+                                    st.success("Objetivo atualizado com sucesso!")
+                                    st.session_state.mostrar_form_edicao = False
+                                    st.rerun()
+                                else:
+                                    st.error("Erro ao atualizar objetivo.")
+                        
+                        if cancelar:
+                            st.session_state.mostrar_form_edicao = False
+                            st.rerun()
             
             # Formulário para atualização de valor
             if "mostrar_form_atualizacao" in st.session_state and st.session_state.mostrar_form_atualizacao:
