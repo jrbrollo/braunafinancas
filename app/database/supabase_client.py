@@ -598,10 +598,12 @@ def save_objetivos(objetivos):
     """
     user = get_current_user()
     if not user:
+        st.error("Erro ao salvar objetivos: usuário não autenticado")
         return False
     
     supabase = get_supabase_client()
     if not supabase:
+        st.error("Erro ao salvar objetivos: cliente Supabase não disponível")
         return False
     
     try:
