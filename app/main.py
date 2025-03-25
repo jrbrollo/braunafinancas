@@ -49,6 +49,24 @@ def load_custom_styles():
         div[data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
         </style>
     """, unsafe_allow_html=True)
+    
+    # Aplicar atributo data-theme para o modo escuro
+    if "tema" in st.session_state and st.session_state.tema == "escuro":
+        # Adiciona um script para definir o atributo data-theme no elemento HTML
+        st.markdown("""
+            <script>
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.classList.add('dark-theme');
+            </script>
+            """, unsafe_allow_html=True)
+    else:
+        # Remove o atributo data-theme para o modo claro
+        st.markdown("""
+            <script>
+                document.documentElement.removeAttribute('data-theme');
+                document.body.classList.remove('dark-theme');
+            </script>
+            """, unsafe_allow_html=True)
 
 # Carregar as fontes do Google
 def load_google_fonts():
@@ -762,6 +780,22 @@ def toggle_tema(tema=None):
             config["tema"] = "claro"
             
     save_config(config)
+    
+    # Força a atualização do atributo data-theme
+    st.markdown(f"""
+        <script>
+            if ("{st.session_state.tema}" === "escuro") {{
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.classList.add('dark-theme');
+            }} else {{
+                document.documentElement.removeAttribute('data-theme');
+                document.body.classList.remove('dark-theme');
+            }}
+        </script>
+    """, unsafe_allow_html=True)
+    
+    # Recarregar a página para aplicar o tema
+    st.rerun()
 
 if __name__ == "__main__":
     main() 
