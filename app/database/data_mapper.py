@@ -221,11 +221,9 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
         if 'id' not in inv_normalizado:
             inv_normalizado['id'] = gerar_id()
         
-        # Mapear campos para equivalentes
+        # Garantir que nome está presente
         if 'descricao' in inv_normalizado and 'nome' not in inv_normalizado:
-            inv_normalizado['nome'] = inv_normalizado['descricao']
-        elif 'nome' in inv_normalizado and 'descricao' not in inv_normalizado:
-            inv_normalizado['descricao'] = inv_normalizado['nome']
+            inv_normalizado['nome'] = inv_normalizado.pop('descricao')
         
         # Garantir que rendimento_anual e rentabilidade_anual existam
         if 'rendimento_anual' in inv_normalizado:
@@ -235,15 +233,13 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
         
         # Garantir campos de data
         if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
-            inv_normalizado['data_inicio'] = inv_normalizado['data_inicial']
-        elif 'data_inicio' in inv_normalizado and 'data_inicial' not in inv_normalizado:
-            inv_normalizado['data_inicial'] = inv_normalizado['data_inicio']
+            inv_normalizado['data_inicio'] = inv_normalizado.pop('data_inicial')
         
         if 'vencimento' in inv_normalizado and 'data_vencimento' not in inv_normalizado:
-            inv_normalizado['data_vencimento'] = inv_normalizado['vencimento']
+            inv_normalizado['data_vencimento'] = inv_normalizado.pop('vencimento')
         
         # Formatar datas
-        for campo_data in ['data_inicio', 'data_inicial', 'data_vencimento', 'data_resgate']:
+        for campo_data in ['data_inicio', 'data_vencimento', 'data_resgate']:
             if campo_data in inv_normalizado:
                 inv_normalizado[campo_data] = formatar_data(inv_normalizado[campo_data])
         
@@ -272,7 +268,11 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
             if campo not in inv_normalizado or inv_normalizado[campo] is None:
                 inv_normalizado[campo] = ""
         
-        return inv_normalizado
+        # Remover campos que não existem na tabela
+        campos_validos = ['id', 'nome', 'tipo', 'categoria', 'valor_inicial', 'valor_atual', 
+                         'data_inicio', 'rentabilidade_anual', 'instituicao', 'notas', 'user_id']
+        return {k: v for k, v in inv_normalizado.items() if k in campos_validos}
+        
     except Exception as e:
         print(f"Erro ao normalizar investimento: {e}")
         print(f"Dados do investimento: {investimento}")

@@ -112,14 +112,14 @@ def render_investimentos_page():
                         "valor_inicial": float(valor_inicial),
                         "valor_atual": float(valor_atual),
                         "data_inicio": data_inicio.strftime("%Y-%m-%d"),
-                        "rendimento_anual": float(rentabilidade_anual) / 100,
+                        "rentabilidade_anual": float(rentabilidade_anual) / 100,
                         "instituicao": "",
                         "notas": ""
                     }
                     
                     # Validar campos obrigatórios
                     if not descricao.strip():
-                        st.error("Por favor, informe a descrição do investimento.")
+                        st.error("Por favor, informe o nome do investimento.")
                     elif valor_inicial <= 0:
                         st.error("O valor inicial deve ser maior que zero.")
                     elif valor_atual <= 0:
@@ -288,7 +288,7 @@ def render_investimentos_page():
                         </div>
                         <div style="display: flex; justify-content: space-between; color: var(--gray);">
                             <div>Desde {data_formatada} ({tempo_decorrido})</div>
-                            <div>Anual: {float(inv.get('rendimento_anual', 0) or 0):.2f}%</div>
+                            <div>Anual: {float(inv.get('rentabilidade_anual', 0) or 0):.2f}%</div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -383,7 +383,7 @@ def render_investimentos_page():
             df = pd.DataFrame(investimentos)
             
             # Verifica se as colunas existem antes de tentar acessá-las
-            colunas_exibicao = ["nome", "categoria", "valor_inicial", "valor_atual", "data_inicio", "rendimento_anual"]
+            colunas_exibicao = ["nome", "categoria", "valor_inicial", "valor_atual", "data_inicio", "rentabilidade_anual"]
             colunas_disponiveis = [col for col in colunas_exibicao if col in df.columns]
             
             if colunas_disponiveis:
@@ -397,7 +397,7 @@ def render_investimentos_page():
                     "valor_inicial": "Valor Inicial",
                     "valor_atual": "Valor Atual",
                     "data_inicio": "Data de Início",
-                    "rendimento_anual": "Rendimento Anual (%)"
+                    "rentabilidade_anual": "Rentabilidade Anual (%)"
                 }
                 
                 df_exibicao = df_exibicao.rename(columns={
@@ -458,7 +458,7 @@ def render_investimentos_page():
             
             if valor_total > 0:
                 rentabilidade_media = sum(
-                    (inv.get("rendimento_anual", 0) or 0) * (inv.get("valor_atual", 0) or 0) / valor_total 
+                    (inv.get("rentabilidade_anual", 0) or 0) * (inv.get("valor_atual", 0) or 0) / valor_total 
                     for inv in investimentos
                 )
                 
@@ -490,7 +490,7 @@ def render_investimentos_page():
             
             for inv in investimentos:
                 categoria = inv.get("categoria", "Outros")
-                rent = inv.get("rendimento_anual", 0) or 0  # Garantir que não seja None
+                rent = inv.get("rentabilidade_anual", 0) or 0  # Garantir que não seja None
                 valor = inv.get("valor_atual", 0) or 0  # Garantir que não seja None
                 
                 if categoria not in categorias_rent:
