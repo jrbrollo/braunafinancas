@@ -209,6 +209,8 @@ def render_objetivos_page():
                         st.error("O nome do objetivo é obrigatório.")
                     elif valor_total <= 0:
                         st.error("O valor total deve ser maior que zero.")
+                    elif valor_atual > valor_total:
+                        st.error("O valor atual não pode ser maior que o valor total.")
                     else:
                         # Criar novo objetivo
                         novo_objetivo = {
