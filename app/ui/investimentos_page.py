@@ -106,12 +106,15 @@ def render_investimentos_page():
                 if submitted:
                     # Criar novo investimento
                     novo_investimento = {
-                        "descricao": descricao,
+                        "nome": descricao,
+                        "tipo": categoria,
+                        "categoria": categoria.lower().replace(" ", "_"),
                         "valor_inicial": valor_inicial,
                         "valor_atual": valor_atual,
                         "data_inicio": data_inicio.strftime("%Y-%m-%d"),
-                        "rentabilidade_anual": rentabilidade_anual,
-                        "categoria": categoria
+                        "rendimento_anual": rentabilidade_anual / 100,
+                        "instituicao": "",
+                        "notas": ""
                     }
                     
                     # Adicionar à lista
@@ -268,7 +271,7 @@ def render_investimentos_page():
                     st.markdown(f"""
                     <div class="card {card_class}" style="margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-size: 1.1rem; font-weight: 500;">{inv.get('descricao', 'Investimento')}</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{inv.get('nome', 'Investimento')}</div>
                             <div style="font-size: 1.2rem; font-weight: 600;">{formatar_moeda(valor_atual)}</div>
                         </div>
                         <div style="margin: 10px 0; display: flex; justify-content: space-between;">
@@ -277,7 +280,7 @@ def render_investimentos_page():
                         </div>
                         <div style="display: flex; justify-content: space-between; color: var(--gray);">
                             <div>Desde {data_formatada} ({tempo_decorrido})</div>
-                            <div>Anual: {float(inv.get('rentabilidade_anual', 0) or 0):.2f}%</div>
+                            <div>Anual: {float(inv.get('rendimento_anual', 0) or 0):.2f}%</div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -372,7 +375,7 @@ def render_investimentos_page():
             df = pd.DataFrame(investimentos)
             
             # Verifica se as colunas existem antes de tentar acessá-las
-            colunas_exibicao = ["descricao", "categoria", "valor_inicial", "valor_atual", "data_inicio", "rentabilidade_anual"]
+            colunas_exibicao = ["nome", "categoria", "valor_inicial", "valor_atual", "data_inicio", "rendimento_anual"]
             colunas_disponiveis = [col for col in colunas_exibicao if col in df.columns]
             
             if colunas_disponiveis:
@@ -381,12 +384,12 @@ def render_investimentos_page():
                 
                 # Renomear colunas
                 mapeamento_colunas = {
-                    "descricao": "Descrição",
+                    "nome": "Descrição",
                     "categoria": "Categoria",
                     "valor_inicial": "Valor Inicial",
                     "valor_atual": "Valor Atual",
                     "data_inicio": "Data de Início",
-                    "rentabilidade_anual": "Rendimento Anual (%)"
+                    "rendimento_anual": "Rendimento Anual (%)"
                 }
                 
                 df_exibicao = df_exibicao.rename(columns={
@@ -411,7 +414,7 @@ def render_investimentos_page():
             st.subheader("Excluir Investimento")
             
             # Criar lista de opções para exclusão
-            opcoes_exclusao = [f"{inv.get('descricao', 'Investimento')} - {formatar_moeda(inv.get('valor_atual', 0))}" for inv in investimentos]
+            opcoes_exclusao = [f"{inv.get('nome', 'Investimento')} - {formatar_moeda(inv.get('valor_atual', 0))}" for inv in investimentos]
             opcoes_dict = {opcao: i for i, opcao in enumerate(opcoes_exclusao)}
             
             if opcoes_exclusao:
@@ -430,7 +433,7 @@ def render_investimentos_page():
                             if save_investimentos(investimentos):
                                 # Recalcular progresso dos objetivos após excluir um investimento
                                 # Comentado temporariamente: calcular_progresso_objetivos()
-                                st.success(f"Investimento '{inv_para_excluir.get('descricao', 'Investimento sem nome')}' excluído com sucesso!")
+                                st.success(f"Investimento '{inv_para_excluir.get('nome', 'Investimento sem nome')}' excluído com sucesso!")
                                 st.rerun()
                             break
     
@@ -447,7 +450,7 @@ def render_investimentos_page():
             
             if valor_total > 0:
                 rentabilidade_media = sum(
-                    (inv.get("rentabilidade_anual", 0) or 0) * (inv.get("valor_atual", 0) or 0) / valor_total 
+                    (inv.get("rendimento_anual", 0) or 0) * (inv.get("valor_atual", 0) or 0) / valor_total 
                     for inv in investimentos
                 )
                 
@@ -479,7 +482,7 @@ def render_investimentos_page():
             
             for inv in investimentos:
                 categoria = inv.get("categoria", "Outros")
-                rent = inv.get("rentabilidade_anual", 0) or 0  # Garantir que não seja None
+                rent = inv.get("rendimento_anual", 0) or 0  # Garantir que não seja None
                 valor = inv.get("valor_atual", 0) or 0  # Garantir que não seja None
                 
                 if categoria not in categorias_rent:

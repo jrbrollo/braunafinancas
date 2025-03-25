@@ -23,8 +23,10 @@ MAPEAMENTO_DIVIDAS = {
 }
 
 MAPEAMENTO_INVESTIMENTOS = {
-    'rendimento': 'rendimento_mensal',
-    'taxa_retorno': 'rendimento_anual',
+    'descricao': 'nome',
+    'rendimento_anual': 'rentabilidade_anual',
+    'data_inicial': 'data_inicio',
+    'vencimento': 'data_vencimento'
 }
 
 MAPEAMENTO_GASTOS = {
@@ -219,11 +221,17 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
         inv_normalizado['id'] = gerar_id()
     
     # Mapear campos para equivalentes
-    if 'rendimento' in inv_normalizado and 'rendimento_mensal' not in inv_normalizado:
-        inv_normalizado['rendimento_mensal'] = inv_normalizado['rendimento']
+    if 'descricao' in inv_normalizado and 'nome' not in inv_normalizado:
+        inv_normalizado['nome'] = inv_normalizado['descricao']
     
-    if 'taxa_retorno' in inv_normalizado and 'rendimento_anual' not in inv_normalizado:
-        inv_normalizado['rendimento_anual'] = inv_normalizado['taxa_retorno']
+    if 'rendimento_anual' in inv_normalizado and 'rentabilidade_anual' not in inv_normalizado:
+        inv_normalizado['rentabilidade_anual'] = inv_normalizado['rendimento_anual']
+    
+    if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
+        inv_normalizado['data_inicio'] = inv_normalizado['data_inicial']
+    
+    if 'vencimento' in inv_normalizado and 'data_vencimento' not in inv_normalizado:
+        inv_normalizado['data_vencimento'] = inv_normalizado['vencimento']
     
     # Formatar datas
     for campo_data in ['data_inicio', 'data_vencimento', 'data_resgate']:
@@ -237,6 +245,10 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
     # Garantir categoria
     if 'categoria' not in inv_normalizado:
         inv_normalizado['categoria'] = "outros"
+    
+    # Garantir tipo
+    if 'tipo' not in inv_normalizado and 'categoria' in inv_normalizado:
+        inv_normalizado['tipo'] = inv_normalizado['categoria'].replace('_', ' ').title()
     
     return inv_normalizado
 
