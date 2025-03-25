@@ -42,7 +42,7 @@ def init_supabase_client():
         return None
     
     try:
-        return create_client(supabase_url, supabase_key)
+        return create_client(supabase_url=supabase_url, supabase_key=supabase_key)
     except Exception as e:
         st.error(f"🚨 Erro ao conectar ao Supabase: {e}")
         return None
