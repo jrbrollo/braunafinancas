@@ -42,8 +42,9 @@ def init_supabase_client():
         return None
     
     try:
-        # Método mais simples e direto para criar o cliente Supabase
-        client = Client(supabase_url, supabase_key)
+        # Usando forma compatível com supabase 1.0.3
+        # Esta versão da biblioteca não tem o problema do proxy
+        client = create_client(supabase_url, supabase_key)
         return client
     except Exception as e:
         st.error(f"🚨 Erro ao conectar ao Supabase: {e}")
@@ -78,16 +79,12 @@ def signup_user(email, password, nome):
         return False, "Cliente Supabase não está disponível"
     
     try:
-        # Registrar o usuário
-        response = supabase.auth.sign_up({
-            "email": email,
-            "password": password,
-            "options": {
-                "data": {
-                    "nome": nome
-                }
-            }
-        })
+        # Compatível com supabase 1.0.3
+        response = supabase.auth.sign_up(
+            email=email,
+            password=password,
+            data={"nome": nome}
+        )
         
         if response.user and response.user.id:
             try:
@@ -137,10 +134,11 @@ def login_user(email, password):
         return False, "Cliente Supabase não está disponível"
     
     try:
-        response = supabase.auth.sign_in_with_password({
-            "email": email,
-            "password": password
-        })
+        # Compatível com supabase 1.0.3
+        response = supabase.auth.sign_in(
+            email=email,
+            password=password
+        )
         
         if response.user:
             user_data = {
