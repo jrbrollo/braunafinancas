@@ -605,17 +605,60 @@ def save_objetivos(objetivos):
         return False
     
     try:
-        # Exclui objetivos existentes do usuário
-        supabase.table("objetivos").delete().eq("user_id", user["id"]).execute()
-        
-        # Insere os novos objetivos
-        if objetivos:
-            for objetivo in objetivos:
-                objetivo["user_id"] = user["id"]
+        # Verifica se há dados para salvar
+        if not objetivos or len(objetivos) == 0:
+            # Se a lista estiver vazia, apenas excluir todos
+            supabase.table("objetivos").delete().eq("user_id", user["id"]).execute()
+            return True
             
-            supabase.table("objetivos").insert(objetivos).execute()
+        # Garantir que todos os campos obrigatórios estejam presentes
+        for objetivo in objetivos:
+            # Garantir que o título está presente (campo obrigatório)
+            if "titulo" not in objetivo and "nome" in objetivo:
+                objetivo["titulo"] = objetivo["nome"]
+            elif "nome" not in objetivo and "titulo" in objetivo:
+                objetivo["nome"] = objetivo["titulo"]
+            elif "titulo" not in objetivo and "nome" not in objetivo:
+                # Se nenhum dos dois estiver presente, evitar o erro
+                st.error("Erro ao salvar: objetivo sem título ou nome")
+                return False
+                
+            # Adicionar user_id em cada objetivo
+            objetivo["user_id"] = user["id"]
         
-        return True
+        # Primeiro, fazer um backup dos objetivos existentes
+        objetivos_existentes = []
+        try:
+            result = supabase.table("objetivos").select("*").eq("user_id", user["id"]).execute()
+            if result.data:
+                objetivos_existentes = result.data
+        except Exception as e:
+            print(f"Aviso: não foi possível fazer backup dos objetivos existentes: {e}")
+        
+        # Agora tenta excluir os objetivos existentes
+        try:
+            supabase.table("objetivos").delete().eq("user_id", user["id"]).execute()
+        except Exception as e:
+            st.error(f"Erro ao excluir objetivos existentes: {e}")
+            return False
+        
+        # Finalmente, insere os novos objetivos
+        try:
+            supabase.table("objetivos").insert(objetivos).execute()
+            return True
+        except Exception as e:
+            # Se falhar ao inserir, tentar restaurar o backup
+            st.error(f"Erro ao salvar objetivos: {e}")
+            
+            # Tenta restaurar os objetivos anteriores se houver backup
+            if objetivos_existentes:
+                try:
+                    supabase.table("objetivos").insert(objetivos_existentes).execute()
+                    st.warning("Os objetivos anteriores foram restaurados devido a um erro.")
+                except Exception as restore_error:
+                    st.error(f"Erro ao restaurar objetivos: {restore_error}")
+                    
+            return False
     except Exception as e:
         st.error(f"Erro ao salvar objetivos: {e}")
         return False

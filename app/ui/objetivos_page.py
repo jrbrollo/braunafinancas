@@ -526,10 +526,12 @@ def render_objetivos_page():
                                 st.error("O valor total deve ser maior que zero.")
                             else:
                                 # Atualizar objetivo
-                                objetivo_atualizado = {
-                                    "id": objetivo_id,
+                                objetivo_atualizado = objetivo.copy()  # Copiar todos os campos existentes
+                                
+                                # Atualizar apenas os campos editados
+                                objetivo_atualizado.update({
                                     "nome": nome,
-                                    "titulo": nome,  # Adicionando o campo título obrigatório
+                                    "titulo": nome,  # Campo título obrigatório
                                     "descricao": descricao,
                                     "valor_total": valor_total,
                                     "valor_atual": valor_atual,
@@ -537,14 +539,18 @@ def render_objetivos_page():
                                     "prioridade": 1 if prioridade == "alta" else 2 if prioridade == "media" else 3,
                                     "data_inicio": data_inicio.strftime("%Y-%m-%d"),
                                     "data_alvo": data_alvo.strftime("%Y-%m-%d"),
-                                    "taxa_retorno": taxa_retorno / 100,  # Converter para decimal
-                                    "investimentos_vinculados": investimentos_vinculados
-                                }
+                                    "taxa_retorno": taxa_retorno / 100  # Converter para decimal
+                                })
+                                
+                                # Garantir que temos os campos obrigatórios
+                                if "user_id" not in objetivo_atualizado:
+                                    # Se por algum motivo não tivermos user_id, será adicionado pelo save_objetivos
+                                    pass
                                 
                                 # Atualizar na lista
-                                objetivos = [objetivo_atualizado if obj.get("id") == objetivo_id else obj for obj in objetivos]
+                                nova_lista_objetivos = [objetivo_atualizado if obj.get("id") == objetivo_id else obj for obj in objetivos]
                                 
-                                if save_objetivos(objetivos):
+                                if save_objetivos(nova_lista_objetivos):
                                     st.success("Objetivo atualizado com sucesso!")
                                     st.session_state.mostrar_form_edicao = False
                                     st.rerun()
