@@ -27,6 +27,28 @@ from app.data.data_handler import load_config, save_config, initialize_data, ens
 # Importar cliente Supabase
 from app.database.supabase_client import get_supabase_client, get_current_user
 
+# Carregar estilos personalizados
+def load_custom_styles():
+    css_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "custom_style.css")
+    with open(css_file, "r", encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Carregar as fontes do Google
+def load_google_fonts():
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    """, unsafe_allow_html=True)
+
+# Esconder o menu principal e o rodapé do Streamlit
+def hide_streamlit_elements():
+    st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
 # Verificar se o cliente Supabase está disponível
 def is_supabase_available():
     """
@@ -35,13 +57,25 @@ def is_supabase_available():
     client = get_supabase_client()
     return client is not None
 
-# Configuração da página do Streamlit
+# Configuração da página
 st.set_page_config(
-    page_title="Brauna Finanças - Finanças Pessoais",
+    page_title="Brauna Finanças",
     page_icon="💰",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
+
+# Renderizar o cabeçalho personalizado
+def render_header():
+    user = get_current_user()
+    email = user.get('email', 'Usuário') if user else 'Usuário'
+    
+    st.markdown(f"""
+    <div class="header">
+        <div class="header-logo">💰 Brauna Finanças</div>
+        <div class="header-user">{email}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 def apply_custom_style(tema="claro"):
     """
@@ -945,4 +979,8 @@ def toggle_tema(tema=None):
     save_config(config)
 
 if __name__ == "__main__":
+    # Carregar estilos e fontes
+    load_google_fonts()
+    load_custom_styles()
+    hide_streamlit_elements()
     main() 

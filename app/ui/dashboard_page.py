@@ -168,351 +168,417 @@ def calcular_patrimonios(investimentos, dividas):
 
 def render_dashboard_page():
     """
-    Renderiza a página principal do dashboard.
+    Renderiza a página de dashboard principal
     """
-    st.header("Dashboard Financeiro")
+    st.title("Dashboard")
     
-    # Carregar dados
-    user_data = load_user_data() or {"nome": "Usuário", "renda_mensal": 0.0}
-    gastos = load_gastos()
+    # Buscar dados para o dashboard
+    objetivos = load_objetivos()
     investimentos = load_investimentos()
     dividas = load_dividas()
+    gastos = load_gastos()
     seguros = load_seguros()
-    objetivos = load_objetivos()
     
-    # Obter valores
-    renda_mensal = user_data.get("renda_mensal", 0)
-    mes_atual = datetime.now().strftime("%Y-%m")
-    gastos_mes_atual = calcular_gastos_periodo(gastos, mes_atual)
+    # Seção de resumo financeiro
+    st.markdown("""
+    <h2 class="card-title">Resumo Financeiro</h2>
+    """, unsafe_allow_html=True)
     
-    # Calcular saldo do mês
-    saldo_mes = renda_mensal - gastos_mes_atual
-    percentual_gasto = (gastos_mes_atual / renda_mensal * 100) if renda_mensal > 0 else 0
+    # Calcular totais
+    total_objetivos = sum(float(o.get("valor_total", 0) or 0) for o in objetivos)
+    total_atingido = sum(float(o.get("valor_atual", 0) or 0) for o in objetivos)
     
-    # Mostrar cartões com valores principais
-    col1, col2, col3 = st.columns(3)
+    total_investimentos = sum(float(i.get("valor_atual", 0) or i.get("valor_inicial", 0) or 0) for i in investimentos)
+    total_dividas = sum(float(d.get("valor_restante", 0) or d.get("valor_atual", 0) or 0) for d in dividas)
+    
+    total_seguros_anual = sum(float(s.get("valor_premio", 0) or 0) for s in seguros)
+    total_seguros_mensal = total_seguros_anual / 12 if total_seguros_anual else 0
+    
+    # Gastos do mês atual
+    mes_atual = datetime.now().month
+    ano_atual = datetime.now().year
+    gastos_mes = [g for g in gastos if (
+        datetime.strptime(g.get("data", "2023-01-01"), "%Y-%m-%d").month == mes_atual and
+        datetime.strptime(g.get("data", "2023-01-01"), "%Y-%m-%d").year == ano_atual
+    )]
+    total_gastos_mes = sum(float(g.get("valor", 0) or 0) for g in gastos_mes)
+    
+    # Patrimônio líquido
+    patrimonio_liquido = total_investimentos - total_dividas
+    
+    # Cards de resumo financeiro
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.markdown(f"""
-        <div style="background-color:{'#263238' if st.session_state.tema == 'escuro' else '#F5F5F5'}; padding:20px; border-radius:10px; text-align:center;">
-            <h4 style="margin:0;">Receita Mensal</h4>
-            <h2 style="color: #1E88E5; margin:10px 0 0 0;">{formatar_moeda(renda_mensal)}</h2>
+        <div class="card">
+            <div class="card-title">Patrimônio Líquido</div>
+            <div class="metric-value{'positive' if patrimonio_liquido >= 0 else ' negative'}">{formatar_moeda(patrimonio_liquido)}</div>
+            <div>Investimentos - Dívidas</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div style="background-color:{'#263238' if st.session_state.tema == 'escuro' else '#F5F5F5'}; padding:20px; border-radius:10px; text-align:center;">
-            <h4 style="margin:0;">Gastos do Mês</h4>
-            <h2 style="color: {'#F44336' if percentual_gasto > 80 else '#FF9800' if percentual_gasto > 50 else '#4CAF50'}; margin:10px 0 0 0;">{formatar_moeda(gastos_mes_atual)}</h2>
-            <p>({percentual_gasto:.1f}% da receita)</p>
+        <div class="card">
+            <div class="card-title">Investimentos</div>
+            <div class="metric-value positive">{formatar_moeda(total_investimentos)}</div>
+            <div>{len(investimentos)} ativos</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
-        <div style="background-color:{'#263238' if st.session_state.tema == 'escuro' else '#F5F5F5'}; padding:20px; border-radius:10px; text-align:center;">
-            <h4 style="margin:0;">Saldo do Mês</h4>
-            <h2 style="color: {'#4CAF50' if saldo_mes >= 0 else '#F44336'}; margin:10px 0 0 0;">{formatar_moeda(saldo_mes)}</h2>
-            <p>({(saldo_mes / renda_mensal * 100) if renda_mensal > 0 else 0:.1f}% da receita)</p>
+        <div class="card">
+            <div class="card-title">Dívidas</div>
+            <div class="metric-value negative">{formatar_moeda(total_dividas)}</div>
+            <div>{len(dividas)} pendentes</div>
         </div>
         """, unsafe_allow_html=True)
     
-    # Adicionar progresso mensal
-    st.markdown("### Progresso Mensal")
+    with col4:
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">Gastos do Mês</div>
+            <div class="metric-value">{formatar_moeda(total_gastos_mes)}</div>
+            <div>{len(gastos_mes)} transações</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Criar barra de progresso personalizada
-    dias_no_mes = calendar.monthrange(datetime.now().year, datetime.now().month)[1]
-    dia_atual = datetime.now().day
-    progresso_mes = min(dia_atual / dias_no_mes * 100, 100)
-    
-    st.markdown(f"""
-    <div style="margin-top:10px; margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span>Dia 1</span>
-            <span>Dia {dia_atual} de {dias_no_mes}</span>
-            <span>Dia {dias_no_mes}</span>
-        </div>
-        <div style="background-color: #E0E0E0; height: 10px; border-radius: 5px;">
-            <div style="background-color: #1E88E5; width: {progresso_mes}%; height: 100%; border-radius: 5px;"></div>
-        </div>
-        <div style="text-align:right; margin-top:5px;">
-            <span>Progresso: {progresso_mes:.1f}%</span>
-        </div>
-    </div>
+    # Gráficos e visualizações
+    st.markdown("""
+    <h2 class="card-title">Visualizações</h2>
     """, unsafe_allow_html=True)
     
-    # Dividir em duas colunas para gráficos
-    col_esq, col_dir = st.columns([3, 2])
+    # Linha 1 de visualizações
+    col1, col2 = st.columns(2)
     
-    with col_esq:
-        # Mostrar gráfico de gastos por categoria para o mês atual
-        st.subheader(f"Gastos por Categoria ({datetime.now().strftime('%B/%Y')})")
+    with col1:
+        st.markdown("""
+        <div class="chart-container">
+            <div class="card-title">Distribuição de Investimentos</div>
+        """, unsafe_allow_html=True)
         
-        # Agrupar gastos por categoria para o mês atual
-        gastos_por_categoria = {}
-        for gasto in gastos:
-            if gasto["data"].startswith(mes_atual):
-                categoria = gasto.get("categoria", "Outros")
-                if categoria not in gastos_por_categoria:
-                    gastos_por_categoria[categoria] = 0
-                gastos_por_categoria[categoria] += gasto["valor"]
-        
-        if gastos_por_categoria:
+        # Preparar dados para o gráfico de pizza de investimentos
+        if investimentos:
+            categorias_inv = {}
+            for inv in investimentos:
+                categoria = inv.get("categoria", "Outros")
+                valor = float(inv.get("valor_atual", 0) or inv.get("valor_inicial", 0) or 0)
+                if categoria in categorias_inv:
+                    categorias_inv[categoria] += valor
+                else:
+                    categorias_inv[categoria] = valor
+            
             # Criar DataFrame para o gráfico
-            df_categorias = pd.DataFrame({
-                'Categoria': list(gastos_por_categoria.keys()),
-                'Valor': list(gastos_por_categoria.values())
+            df_inv = pd.DataFrame({
+                'Categoria': list(categorias_inv.keys()),
+                'Valor': list(categorias_inv.values())
             })
             
-            # Ordenar por valor
-            df_categorias = df_categorias.sort_values('Valor', ascending=False)
-            
-            # Criar gráfico de barras
-            fig = px.bar(
-                df_categorias,
-                x='Categoria',
-                y='Valor',
-                color='Categoria',
-                title=f"Gastos por Categoria - {datetime.now().strftime('%B/%Y')}",
-                text_auto=True
+            # Gráfico de pizza para investimentos
+            fig = px.pie(
+                df_inv, 
+                values='Valor', 
+                names='Categoria',
+                color_discrete_sequence=px.colors.sequential.Blues,
+                hole=0.4
             )
             
             fig.update_layout(
-                xaxis_title="",
-                yaxis_title="Valor (R$)",
-                showlegend=False
+                margin=dict(t=20, b=20, l=20, r=20),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5)
             )
             
-            # Formatar valores no hover
             fig.update_traces(
-                hovertemplate="<b>%{x}</b><br>Valor: " + 
-                             f"{formatar_moeda(0).replace('0', '%{y:,.2f}')}<br>"
+                textposition='inside',
+                textinfo='percent+label',
+                hovertemplate='<b>%{label}</b><br>Valor: %{value:,.2f}<br>Percentual: %{percent}'
             )
             
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info(f"Nenhum gasto registrado para {datetime.now().strftime('%B/%Y')}.")
+            st.info("Adicione investimentos para visualizar a distribuição.")
         
-        # Mostrar tendência de gastos dos últimos meses
-        st.subheader("Tendência de Gastos (Últimos 6 Meses)")
-        
-        # Obter meses anteriores
-        meses_anteriores = obter_meses_anteriores(6)
-        
-        # Verificar se há gastos nos meses anteriores
-        tem_gastos_anteriores = any(
-            any(gasto["data"].startswith(mes["formato_numerico"]) for gasto in gastos)
-            for mes in meses_anteriores
-        )
-        
-        if tem_gastos_anteriores:
-            # Criar gráfico de tendência
-            fig_tendencia = criar_grafico_tendencia_gastos(gastos, meses_anteriores)
-            st.plotly_chart(fig_tendencia, use_container_width=True)
-        else:
-            st.info("Não há dados suficientes para mostrar a tendência de gastos.")
+        st.markdown("""
+        </div>
+        """, unsafe_allow_html=True)
     
-    with col_dir:
-        # Mostrar resumo do patrimônio
-        st.subheader("Resumo do Patrimônio")
-        
-        # Calcular valores
-        patrimonio_bruto, total_dividas, patrimonio_liquido = calcular_patrimonios(investimentos, dividas)
-        
-        # Mostrar valores em cards modernos usando a classe 'card' definida no CSS
+    with col2:
         st.markdown("""
-        <div class="card success">
-            <div class="metric-label">Patrimônio Bruto</div>
-            <div class="metric-value">{}</div>
-            <div>Total de todos seus investimentos</div>
-        </div>
-        """.format(formatar_moeda(patrimonio_bruto)), unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="card danger">
-            <div class="metric-label">Total de Dívidas</div>
-            <div class="metric-value">{}</div>
-            <div>Soma de todas suas dívidas</div>
-        </div>
-        """.format(formatar_moeda(total_dividas)), unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="card">
-            <div class="metric-label">Patrimônio Líquido</div>
-            <div class="metric-value">{}</div>
-            <div>Patrimônio bruto menos dívidas</div>
-        </div>
-        """.format(formatar_moeda(patrimonio_liquido)), unsafe_allow_html=True)
-
-        # Informações adicionais
-        if investimentos:
-            # Encontrar o investimento com maior rentabilidade
-            # Certifique-se de que None seja convertido para 0 antes da comparação
-            rentabilidades = [float(i.get("rentabilidade_anual", 0) or 0) for i in investimentos]
-            maior_rentabilidade = max(rentabilidades, default=0)
-            melhor_investimento = next((i for i in investimentos if i.get("rentabilidade_anual", 0) == maior_rentabilidade), None)
-            
-            if melhor_investimento and maior_rentabilidade > 0:
-                st.markdown("""
-                <div class="card success" style="background-color: rgba(76, 175, 80, 0.1);">
-                    <div class="metric-label">Melhor Investimento</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">{}</div>
-                    <div>Rentabilidade de {}% ao ano</div>
-                </div>
-                """.format(
-                    melhor_investimento.get("descricao", ""),
-                    maior_rentabilidade
-                ), unsafe_allow_html=True)
-        
-        # Próximas dívidas ou seguros a vencer
-        st.markdown("### Próximos Vencimentos")
-        
-        # Combinar dívidas e seguros em uma única lista
-        vencimentos = []
-        
-        for divida in dividas:
-            if "data_vencimento" in divida and "descricao" in divida:
-                try:
-                    data_venc = datetime.strptime(divida["data_vencimento"], "%Y-%m-%d")
-                    vencimentos.append({
-                        "tipo": "Dívida",
-                        "descricao": divida["descricao"],
-                        "data": data_venc,
-                        "valor": divida.get("valor_atual", 0)
-                    })
-                except:
-                    pass
-        
-        for seguro in seguros:
-            if "data_renovacao" in seguro and "descricao" in seguro:
-                try:
-                    data_venc = datetime.strptime(seguro["data_renovacao"], "%Y-%m-%d")
-                    vencimentos.append({
-                        "tipo": "Seguro",
-                        "descricao": seguro["descricao"],
-                        "data": data_venc,
-                        "valor": seguro.get("premio_anual", 0)
-                    })
-                except:
-                    pass
-        
-        # Ordenar por data de vencimento
-        vencimentos.sort(key=lambda x: x["data"])
-        
-        # Mostrar os próximos 3 vencimentos
-        proximos = vencimentos[:3]
-        
-        if proximos:
-            for item in proximos:
-                dias_faltantes = (item["data"] - datetime.now()).days
-                cor = "success"
-                if dias_faltantes <= 7: cor = "danger"
-                elif dias_faltantes <= 30: cor = "warning"
-                
-                st.markdown(f"""
-                <div class="card {cor}" style="margin-bottom: 10px; padding: 10px;">
-                    <div style="display:flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>{item["descricao"]}</strong> ({item["tipo"]})
-                            <div>{item["data"].strftime("%d/%m/%Y")}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div>{formatar_moeda(item["valor"])}</div>
-                            <div>{dias_faltantes} dias</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("Não há vencimentos próximos.")
-        
-        # Mostrar objetivos próximos de conclusão
-        st.markdown("### Objetivos Próximos")
+        <div class="chart-container">
+            <div class="card-title">Progresso dos Objetivos</div>
+        """, unsafe_allow_html=True)
         
         if objetivos:
-            # Calcular percentual de conclusão para cada objetivo
-            objetivos_com_progresso = []
-            for obj in objetivos:
-                valor_total = obj.get("valor_total", 1)
-                valor_atual = obj.get("valor_atual", 0)
-                percentual = (valor_atual / valor_total) * 100 if valor_total > 0 else 0
-                
-                # Adicionar à lista com percentual calculado
-                obj_temp = obj.copy()
-                obj_temp["percentual"] = percentual
-                objetivos_com_progresso.append(obj_temp)
+            # Preparar dados para o gráfico de barras de objetivos
+            nomes_obj = [o.get("nome", f"Objetivo {i+1}") for i, o in enumerate(objetivos)]
+            valores_total = [float(o.get("valor_total", 0) or 0) for o in objetivos]
+            valores_atual = [float(o.get("valor_atual", 0) or 0) for o in objetivos]
             
-            # Ordenar objetivos pelo percentual de conclusão (descendente)
-            objetivos_ordenados = sorted(objetivos_com_progresso, key=lambda x: x["percentual"], reverse=True)
+            # Calcular percentuais para mostrar no hover
+            percentuais = [
+                round(atual / total * 100 if total > 0 else 0, 2)
+                for atual, total in zip(valores_atual, valores_total)
+            ]
             
-            # Mostrar os 3 objetivos mais próximos de conclusão
-            objetivos_proximos = objetivos_ordenados[:3]
+            # Gráfico de barras para objetivos
+            df_obj = pd.DataFrame({
+                'Objetivo': nomes_obj,
+                'Atual': valores_atual,
+                'Total': valores_total,
+                'Percentual': percentuais
+            })
             
-            for obj in objetivos_proximos:
-                percentual = obj["percentual"]
-                cor = "success" if percentual >= 75 else "warning" if percentual >= 50 else "danger"
+            # Ordenar por percentual de conclusão (do menor para o maior)
+            df_obj = df_obj.sort_values('Percentual', ascending=True)
+            
+            # Gráfico de barras para objetivos
+            fig = go.Figure()
+            
+            # Adicionar barra do valor total (fundo)
+            fig.add_trace(go.Bar(
+                x=df_obj['Total'],
+                y=df_obj['Objetivo'],
+                orientation='h',
+                marker=dict(color='rgba(0, 0, 0, 0.1)'),
+                hoverinfo='none',
+                showlegend=False
+            ))
+            
+            # Adicionar barra do valor atual (progresso)
+            fig.add_trace(go.Bar(
+                x=df_obj['Atual'],
+                y=df_obj['Objetivo'],
+                orientation='h',
+                marker=dict(color='#2A5CAA'),
+                text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}%"),
+                textposition='auto',
+                name='Progresso',
+                hovertemplate='<b>%{y}</b><br>Atual: R$ %{x:,.2f}<br>Percentual: %{text}'
+            ))
+            
+            fig.update_layout(
+                barmode='overlay',
+                yaxis=dict(
+                    title='',
+                    tickfont=dict(size=12)
+                ),
+                xaxis=dict(
+                    title='Valor (R$)',
+                    tickformat=',.0f'
+                ),
+                margin=dict(t=20, b=20, l=20, r=20),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Adicione objetivos para visualizar o progresso.")
+        
+        st.markdown("""
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Linha 2 de visualizações
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="chart-container">
+            <div class="card-title">Gastos por Categoria</div>
+        """, unsafe_allow_html=True)
+        
+        if gastos_mes:
+            # Preparar dados para o gráfico de gastos por categoria
+            categorias_gastos = {}
+            for gasto in gastos_mes:
+                categoria = gasto.get("categoria", "Outros")
+                valor = float(gasto.get("valor", 0) or 0)
+                if categoria in categorias_gastos:
+                    categorias_gastos[categoria] += valor
+                else:
+                    categorias_gastos[categoria] = valor
+            
+            # Criar DataFrame para o gráfico
+            df_gastos = pd.DataFrame({
+                'Categoria': list(categorias_gastos.keys()),
+                'Valor': list(categorias_gastos.values())
+            })
+            
+            # Ordenar por valor (do maior para o menor)
+            df_gastos = df_gastos.sort_values('Valor', ascending=False)
+            
+            # Gráfico de barras para gastos
+            fig = px.bar(
+                df_gastos, 
+                x='Categoria', 
+                y='Valor',
+                color='Valor',
+                color_continuous_scale=px.colors.sequential.Reds,
+                text='Valor'
+            )
+            
+            fig.update_traces(
+                texttemplate='R$ %{text:.2f}',
+                textposition='auto',
+                hovertemplate='<b>%{x}</b><br>Valor: R$ %{y:,.2f}'
+            )
+            
+            fig.update_layout(
+                yaxis_title="Valor (R$)",
+                xaxis_title="",
+                coloraxis_showscale=False,
+                margin=dict(t=20, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Adicione gastos no mês atual para visualizar a distribuição por categoria.")
+        
+        st.markdown("""
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="chart-container">
+            <div class="card-title">Vencimentos Próximos</div>
+        """, unsafe_allow_html=True)
+        
+        # Combinar dívidas e seguros para mostrar próximos vencimentos
+        vencimentos = []
+        hoje = datetime.now().date()
+        
+        # Adicionar vencimentos de dívidas
+        for divida in dividas:
+            if "data_vencimento" in divida and divida["data_vencimento"]:
+                try:
+                    data_venc = datetime.strptime(divida["data_vencimento"], "%Y-%m-%d").date()
+                    dias_restantes = (data_venc - hoje).days
+                    if 0 <= dias_restantes <= 30:  # Mostrar vencimentos nos próximos 30 dias
+                        vencimentos.append({
+                            "tipo": "Dívida",
+                            "descricao": divida.get("descricao", "Sem descrição"),
+                            "data": data_venc,
+                            "dias_restantes": dias_restantes,
+                            "valor": float(divida.get("valor_restante", 0) or divida.get("valor_atual", 0) or 0)
+                        })
+                except (ValueError, TypeError):
+                    continue
+        
+        # Adicionar vencimentos de seguros
+        for seguro in seguros:
+            if "data_vencimento" in seguro and seguro["data_vencimento"]:
+                try:
+                    data_venc = datetime.strptime(seguro["data_vencimento"], "%Y-%m-%d").date()
+                    dias_restantes = (data_venc - hoje).days
+                    if 0 <= dias_restantes <= 30:  # Mostrar vencimentos nos próximos 30 dias
+                        vencimentos.append({
+                            "tipo": "Seguro",
+                            "descricao": seguro.get("descricao", "Sem descrição"),
+                            "data": data_venc,
+                            "dias_restantes": dias_restantes,
+                            "valor": float(seguro.get("valor_premio", 0) or 0)
+                        })
+                except (ValueError, TypeError):
+                    continue
+        
+        # Ordenar por dias restantes (do menor para o maior)
+        vencimentos.sort(key=lambda x: x["dias_restantes"])
+        
+        if vencimentos:
+            # Mostrar lista de vencimentos próximos
+            st.markdown("""
+            <div class="styled-table-container" style="max-height: 300px; overflow-y: auto;">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Dias</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """, unsafe_allow_html=True)
+            
+            for venc in vencimentos:
+                # Determinar classe de status com base nos dias restantes
+                if venc["dias_restantes"] <= 3:
+                    status_class = "badge-danger"
+                    status_text = "Urgente"
+                elif venc["dias_restantes"] <= 7:
+                    status_class = "badge-warning"
+                    status_text = "Próximo"
+                else:
+                    status_class = "badge-success"
+                    status_text = "OK"
                 
                 st.markdown(f"""
-                <div class="card {cor}" style="margin-bottom: 10px; padding: 10px;">
-                    <div style="display:flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>{obj.get("nome", "Objetivo")}</strong>
-                            <div>{formatar_moeda(obj.get("valor_atual", 0))} de {formatar_moeda(obj.get("valor_total", 0))}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div>{percentual:.1f}%</div>
-                            <div>concluído</div>
-                        </div>
-                    </div>
-                </div>
+                    <tr>
+                        <td>{venc["tipo"]}</td>
+                        <td>{venc["descricao"]}</td>
+                        <td>{venc["data"].strftime("%d/%m/%Y")}</td>
+                        <td><span class="badge {status_class}">{venc["dias_restantes"]} dias</span></td>
+                        <td>{formatar_moeda(venc["valor"])}</td>
+                    </tr>
                 """, unsafe_allow_html=True)
-        else:
-            st.info("Nenhum objetivo financeiro cadastrado.")
-    
-    # Mostrar ações recomendadas
-    st.markdown("---")
-    st.subheader("Ações Recomendadas")
-    
-    acoes = []
-    
-    # Verificar se a pessoa está gastando mais do que ganha
-    if saldo_mes < 0:
-        acoes.append(("Alerta de saldo negativo", "Seus gastos estão superando sua receita mensal. Considere revisar despesas.", "#F44336"))
-    
-    # Verificar se há gastos cadastrados
-    if not gastos:
-        acoes.append(("Cadastre seus gastos", "Registre seus gastos para ter um melhor controle financeiro.", "#FF9800"))
-    
-    # Verificar se há investimentos cadastrados
-    if not investimentos:
-        acoes.append(("Comece a investir", "Cadastre seus investimentos ou inicie uma estratégia de investimentos.", "#1E88E5"))
-    
-    # Verificar se há patrimônio líquido negativo
-    if patrimonio_liquido < 0:
-        acoes.append(("Patrimônio líquido negativo", "Suas dívidas superam seus ativos. Priorize a quitação de dívidas.", "#F44336"))
-    
-    # Verificar proporção de gastos (se está gastando mais de 80% da renda)
-    if renda_mensal > 0 and percentual_gasto > 80:
-        acoes.append(("Despesas elevadas", f"Seus gastos representam {percentual_gasto:.1f}% da sua receita. Considere reduzir despesas.", "#FF9800"))
-    
-    # Verificar se há objetivos cadastrados
-    if not objetivos:
-        acoes.append(("Defina seus objetivos", "Cadastre seus objetivos financeiros para acompanhar seu progresso.", "#1E88E5"))
-    
-    # Verificar se há objetivos sem investimentos vinculados
-    objetivos_sem_investimentos = [obj for obj in objetivos if not obj.get("investimentos_vinculados")]
-    if objetivos_sem_investimentos:
-        acoes.append(("Vincule investimentos aos objetivos", "Associe seus investimentos aos seus objetivos financeiros.", "#FF9800"))
-    
-    # Exibir ações recomendadas
-    if acoes:
-        for titulo, descricao, cor in acoes:
-            st.markdown(f"""
-            <div style="background-color:{'#263238' if st.session_state.tema == 'escuro' else '#F5F5F5'}; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid {cor};">
-                <h4 style="margin:0; color:{cor};">{titulo}</h4>
-                <p style="margin:10px 0 0 0;">{descricao}</p>
+            
+            st.markdown("""
+                    </tbody>
+                </table>
             </div>
             """, unsafe_allow_html=True)
-    else:
-        st.success("Parabéns! Suas finanças parecem estar em ordem. Continue acompanhando regularmente.") 
+        else:
+            st.info("Não há vencimentos nos próximos 30 dias.")
+        
+        st.markdown("""
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Seção de ações rápidas
+    st.markdown("""
+    <h2 class="card-title">Ações Rápidas</h2>
+    <div class="card">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+    """, unsafe_allow_html=True)
+    
+    # Usar colunas para criar botões de ação rápida
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("➕ Novo Gasto", use_container_width=True):
+            st.session_state.pagina_atual = "gastos"
+            st.session_state.mostrar_form_gasto = True
+            st.rerun()
+    
+    with col2:
+        if st.button("💰 Novo Investimento", use_container_width=True):
+            st.session_state.pagina_atual = "investimentos"
+            st.session_state.mostrar_form_investimento = True
+            st.rerun()
+    
+    with col3:
+        if st.button("🎯 Novo Objetivo", use_container_width=True):
+            st.session_state.pagina_atual = "objetivos"
+            st.session_state.mostrar_form_objetivo = True
+            st.rerun()
+    
+    with col4:
+        if st.button("💳 Nova Dívida", use_container_width=True):
+            st.session_state.pagina_atual = "dividas"
+            st.session_state.mostrar_form_divida = True
+            st.rerun()
+    
+    with col5:
+        if st.button("🔒 Novo Seguro", use_container_width=True):
+            st.session_state.pagina_atual = "seguros"
+            st.session_state.mostrar_form_seguro = True
+            st.rerun()
+    
+    st.markdown("""
+        </div>
+    </div>
+    """, unsafe_allow_html=True) 
