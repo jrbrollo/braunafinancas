@@ -30,8 +30,15 @@ from app.database.supabase_client import get_supabase_client, get_current_user
 # Carregar estilos personalizados
 def load_custom_styles():
     css_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "custom_style.css")
-    with open(css_file, "r", encoding="utf-8") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    if os.path.exists(css_file):
+        with open(css_file, "r", encoding="utf-8") as f:
+            st.markdown(f"""
+            <style>
+            {f.read()}
+            </style>
+            """, unsafe_allow_html=True)
+    else:
+        st.error(f"Arquivo CSS não encontrado: {css_file}")
 
 # Carregar as fontes do Google
 def load_google_fonts():
@@ -69,11 +76,15 @@ st.set_page_config(
 def render_header():
     user = get_current_user()
     email = user.get('email', 'Usuário') if user else 'Usuário'
+    nome = user.get('nome', email.split('@')[0]) if user else 'Usuário'
     
     st.markdown(f"""
     <div class="header">
         <div class="header-logo">💰 Brauna Finanças</div>
-        <div class="header-user">{email}</div>
+        <div class="header-user">
+            <span class="user-icon">👤</span>
+            <span class="user-name">{nome}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -548,6 +559,11 @@ def main():
     """
     Função principal que inicializa a aplicação
     """
+    # Carregar estilos e fontes primeiro, antes de qualquer outro elemento da UI
+    load_google_fonts()
+    load_custom_styles()
+    hide_streamlit_elements()
+    
     # Garantir que diretórios de dados existam
     ensure_data_dirs()
     
@@ -979,8 +995,4 @@ def toggle_tema(tema=None):
     save_config(config)
 
 if __name__ == "__main__":
-    # Carregar estilos e fontes
-    load_google_fonts()
-    load_custom_styles()
-    hide_streamlit_elements()
     main() 
