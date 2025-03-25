@@ -42,7 +42,7 @@ MAPEAMENTO_SEGUROS = {
 CAMPOS_OBRIGATORIOS = {
     'objetivos': ['nome', 'valor_total'],
     'dividas': ['descricao', 'valor_total'],
-    'investimentos': ['nome', 'valor_inicial', 'categoria'],
+    'investimentos': ['nome', 'valor_inicial', 'data_inicio'],
     'gastos': ['descricao', 'valor'],
     'seguros': ['tipo', 'descricao', 'valor_premio'],
 }
@@ -232,6 +232,8 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
         # Garantir campos de data
         if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
             inv_normalizado['data_inicio'] = inv_normalizado.pop('data_inicial')
+        elif 'data_inicio' not in inv_normalizado:
+            inv_normalizado['data_inicio'] = datetime.now().strftime("%Y-%m-%d")
         
         if 'vencimento' in inv_normalizado and 'data_vencimento' not in inv_normalizado:
             inv_normalizado['data_vencimento'] = inv_normalizado.pop('vencimento')
