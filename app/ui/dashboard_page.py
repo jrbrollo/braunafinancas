@@ -292,9 +292,11 @@ def render_dashboard_page():
     col1, col2 = st.columns(2)
     
     with col1:
+        # Card único contendo título e gráfico
         st.markdown("""
         <div class="chart-container">
             <div class="card-title">Distribuição de Investimentos</div>
+            <div class="chart-content">
         """, unsafe_allow_html=True)
         
         # Preparar dados para o gráfico de pizza de investimentos
@@ -319,8 +321,8 @@ def render_dashboard_page():
                 df_inv, 
                 values='Valor', 
                 names='Categoria',
-                color_discrete_sequence=px.colors.qualitative.Set2,
-                hole=0.5
+                color_discrete_sequence=px.colors.qualitative.Pastel1,
+                hole=0.6
             )
             
             fig.update_layout(
@@ -335,15 +337,29 @@ def render_dashboard_page():
                     font=dict(size=11)
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
+                plot_bgcolor='rgba(0,0,0,0)',
+                uniformtext_minsize=12,
+                uniformtext_mode='hide'
             )
             
             fig.update_traces(
                 textposition='inside',
                 textinfo='percent+label',
-                insidetextfont=dict(color='white', size=12),
+                insidetextfont=dict(color='white', size=12, family="Arial, sans-serif"),
                 hovertemplate='<b>%{label}</b><br>Valor: %{value:,.2f}<br>Percentual: %{percent}',
-                marker=dict(line=dict(color='white', width=2))
+                marker=dict(
+                    line=dict(color='white', width=2),
+                    pattern=dict(shape="")
+                ),
+                rotation=45
+            )
+            
+            # Adicionar título central no donut
+            fig.add_annotation(
+                text=f"R$ {sum(df_inv['Valor']):,.0f}",
+                x=0.5, y=0.5,
+                font=dict(size=14, color='#333', family="Arial, sans-serif"),
+                showarrow=False
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -351,13 +367,16 @@ def render_dashboard_page():
             st.info("Adicione investimentos para visualizar a distribuição.")
         
         st.markdown("""
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
+        # Card único contendo título e gráfico
         st.markdown("""
         <div class="chart-container">
             <div class="card-title">Progresso dos Objetivos</div>
+            <div class="chart-content">
         """, unsafe_allow_html=True)
         
         if objetivos:
@@ -391,7 +410,10 @@ def render_dashboard_page():
                 x=df_obj['Total'],
                 y=df_obj['Objetivo'],
                 orientation='h',
-                marker=dict(color='rgba(0, 0, 0, 0.08)'),
+                marker=dict(
+                    color='rgba(0, 0, 0, 0.06)',
+                    pattern=dict(shape="-")
+                ),
                 hoverinfo='none',
                 showlegend=False
             ))
@@ -402,13 +424,42 @@ def render_dashboard_page():
                 y=df_obj['Objetivo'],
                 orientation='h',
                 marker=dict(
-                    color='#2196F3',
-                    line=dict(color='#1976D2', width=1)
+                    color='#4DB6AC',
+                    line=dict(color='#00897B', width=1),
+                    gradient=dict(
+                        type="horizontal",
+                        color="#80CBC4"
+                    )
                 ),
                 name='Progresso',
                 hovertemplate='<b>%{y}</b><br>Progresso: %{x:,.2f} (%{text}%)<extra></extra>',
                 text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}"),
+                textposition="inside",
+                insidetextanchor="middle",
+                textfont=dict(color="white", size=12, family="Arial, sans-serif")
             ))
+            
+            # Adicionar rótulos de valor
+            for i, (obj, atual, total, pct) in enumerate(zip(df_obj['Objetivo'], df_obj['Atual'], df_obj['Total'], df_obj['Percentual'])):
+                if pct >= 20:  # Mostrar texto interno somente para barras maiores
+                    fig.add_annotation(
+                        x=atual/2,
+                        y=obj,
+                        text=f"{pct:.0f}%",
+                        showarrow=False,
+                        font=dict(color="white", size=11),
+                        xanchor="center"
+                    )
+                
+                # Mostrar valor total à direita
+                fig.add_annotation(
+                    x=total + (max(df_obj['Total']) * 0.03),
+                    y=obj,
+                    text=f"R$ {total:,.0f}",
+                    showarrow=False,
+                    font=dict(color="#777", size=10),
+                    xanchor="left"
+                )
             
             # Atualizar layout do gráfico
             fig.update_layout(
@@ -417,16 +468,23 @@ def render_dashboard_page():
                     title='Valor (R$)',
                     showgrid=True,
                     gridcolor='rgba(0,0,0,0.05)',
-                    zeroline=False
+                    zeroline=False,
+                    showticklabels=False
                 ),
                 yaxis=dict(
                     title='',
-                    autorange="reversed"
+                    autorange="reversed",
+                    tickfont=dict(size=11, family="Arial, sans-serif")
                 ),
                 height=280,
                 margin=dict(t=0, b=0, l=0, r=10),
                 paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
+                plot_bgcolor='rgba(0,0,0,0)',
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Arial, sans-serif"
+                )
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -434,6 +492,7 @@ def render_dashboard_page():
             st.info("Adicione objetivos para visualizar o progresso.")
         
         st.markdown("""
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -441,9 +500,11 @@ def render_dashboard_page():
     col1, col2 = st.columns(2)
     
     with col1:
+        # Card único contendo título e gráfico
         st.markdown("""
         <div class="chart-container">
             <div class="card-title">Gastos por Categoria</div>
+            <div class="chart-content">
         """, unsafe_allow_html=True)
         
         if gastos_mes:
@@ -472,14 +533,18 @@ def render_dashboard_page():
                 x='Categoria', 
                 y='Valor',
                 color='Valor',
-                color_continuous_scale=px.colors.sequential.Reds_r,
+                color_continuous_scale=["#FFCDD2", "#E53935"],
                 text='Valor'
             )
             
             fig.update_traces(
                 texttemplate='R$ %{text:,.0f}',
                 textposition='auto',
-                marker=dict(line=dict(width=1, color='#fff')),
+                textfont=dict(color="white", size=11, family="Arial, sans-serif"),
+                marker=dict(
+                    line=dict(width=1, color='#fff'),
+                    pattern=dict(shape="")
+                ),
                 hovertemplate='<b>%{x}</b><br>Valor: R$ %{y:,.2f}'
             )
             
@@ -491,11 +556,21 @@ def render_dashboard_page():
                 margin=dict(t=0, b=0, l=0, r=0),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                xaxis=dict(showgrid=False),
+                xaxis=dict(
+                    showgrid=False,
+                    tickangle=-45,
+                    tickfont=dict(size=10, family="Arial, sans-serif")
+                ),
                 yaxis=dict(
                     showgrid=True,
                     gridcolor='rgba(0,0,0,0.05)',
-                    zeroline=False
+                    zeroline=False,
+                    tickformat='R$ %{y:,.0f}'
+                ),
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Arial, sans-serif"
                 )
             )
             
@@ -504,13 +579,21 @@ def render_dashboard_page():
             st.info("Adicione gastos no mês atual para visualizar a distribuição por categoria.")
         
         st.markdown("""
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
+        # Card único contendo título e vencimentos
         st.markdown("""
         <div class="chart-container">
             <div class="card-title">Vencimentos Próximos</div>
+            <div class="chart-content">
+        """, unsafe_allow_html=True)
+        
+        # Container para vencimentos
+        st.markdown("""
+        <div class="vencimentos-container">
         """, unsafe_allow_html=True)
         
         # Combinar dívidas e seguros para mostrar próximos vencimentos
@@ -554,10 +637,6 @@ def render_dashboard_page():
         # Ordenar por proximidade da data
         vencimentos.sort(key=lambda x: x["dias_restantes"])
         
-        st.markdown("""
-        <div class="vencimentos-container">
-        """, unsafe_allow_html=True)
-        
         if vencimentos:
             # Criar uma tabela de vencimentos
             vencimentos_html = ""
@@ -585,6 +664,7 @@ def render_dashboard_page():
             st.info("Não há vencimentos nos próximos 30 dias.")
         
         st.markdown("""
-        </div>
+            </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)

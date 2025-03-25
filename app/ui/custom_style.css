@@ -397,66 +397,98 @@ table tr:hover {
 .chart-container {
   background-color: white !important;
   border-radius: var(--card-radius) !important;
-  padding: 20px !important;
+  padding: 0 !important;
   margin-bottom: 20px !important;
   box-shadow: var(--shadow) !important;
   height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.chart-container:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
 }
 
 .chart-container .card-title {
-  font-size: 1.2rem !important;
+  font-size: 1.1rem !important;
   font-weight: 600 !important;
   color: var(--primary) !important;
-  margin-top: 0 !important;
-  margin-bottom: 15px !important;
-  border-bottom: 2px solid var(--primary-light) !important;
-  padding-bottom: 8px !important;
+  margin: 0 !important;
+  padding: 16px 20px !important;
+  background-color: rgba(245, 247, 250, 0.8) !important;
+  border-bottom: 1px solid #e0e0e0 !important;
 }
 
-/* Correções para layout específico */
-.element-container {
-  margin-bottom: 0.75rem !important;
+.chart-container .chart-content {
+  padding: 16px !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-/* Alinhamento de colunas com mais espaço */
-[data-testid="column"] {
-  padding: 0.75rem !important;
+/* Estilos de gráficos */
+[data-testid="stPlotlyChart"] {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-[data-testid="stVerticalBlock"] > div:not(.element-container) {
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  margin-bottom: 0.75rem !important;
+/* Vencimentos container */
+.vencimentos-container {
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  border-radius: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 !important;
+}
+
+.vencimento-item {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 8px !important;
+  padding: 12px !important;
+  background-color: rgba(0,0,0,0.02) !important;
+  border-radius: 8px !important;
+  border-left: 4px solid var(--primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+.vencimento-item:hover {
+  background-color: rgba(0,0,0,0.05) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
 }
 
 /* Badges de status */
 .badge {
   display: inline-block !important;
-  padding: 3px 8px !important;
-  border-radius: 12px !important;
-  font-size: 0.75rem !important;
-  margin-right: 8px !important;
+  padding: 4px 8px !important;
+  border-radius: 30px !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
 }
 
 .badge-success {
-  background-color: rgba(76, 175, 80, 0.15) !important;
-  color: var(--positive) !important;
-  border: 1px solid rgba(76, 175, 80, 0.3) !important;
+  background-color: #4CAF50 !important;
+  color: white !important;
+  box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3) !important;
 }
 
 .badge-warning {
-  background-color: rgba(255, 215, 0, 0.15) !important;
-  color: #D4AF00 !important;
-  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+  background-color: #FFD700 !important;
+  color: #333 !important;
+  box-shadow: 0 1px 3px rgba(255, 215, 0, 0.3) !important;
 }
 
 .badge-danger {
-  background-color: rgba(239, 83, 80, 0.15) !important;
-  color: var(--negative) !important;
-  border: 1px solid rgba(239, 83, 80, 0.3) !important;
+  background-color: #EF5350 !important;
+  color: white !important;
+  box-shadow: 0 1px 3px rgba(239, 83, 80, 0.3) !important;
 }
 
 /* Correções para streamlit */
