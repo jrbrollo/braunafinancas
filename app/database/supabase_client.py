@@ -80,10 +80,16 @@ def signup_user(email, password, nome):
     
     try:
         # Método correto para supabase 1.0.3
-        response = supabase.auth.sign_up_with_email_and_password(
-            email=email,
-            password=password,
-            data={"nome": nome}
+        response = supabase.auth.sign_up(
+            {
+                "email": email,
+                "password": password,
+                "options": {
+                    "data": {
+                        "nome": nome
+                    }
+                }
+            }
         )
         
         if response.user and response.user.id:
@@ -135,9 +141,11 @@ def login_user(email, password):
     
     try:
         # Método correto para supabase 1.0.3
-        response = supabase.auth.sign_in_with_email_and_password(
-            email=email,
-            password=password
+        response = supabase.auth.sign_in(
+            {
+                "email": email,
+                "password": password
+            }
         )
         
         if response.user:
