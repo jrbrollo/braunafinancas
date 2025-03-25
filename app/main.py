@@ -685,7 +685,7 @@ def main():
             st.rerun()
             
         # Toggle para tema claro/escuro
-        tema_label = "🌙 Tema Escuro" if tema_atual == "claro" else "☀️ Tema Claro"
+        tema_label = "🌙 Tema Escuro" if st.session_state.tema == "claro" else "☀️ Tema Claro"
         if st.button(tema_label, use_container_width=True, type="secondary"):
             toggle_tema()
             st.rerun()
