@@ -131,7 +131,7 @@ def render_investimentos_page():
                             st.success("✅ Investimento adicionado com sucesso!")
                             # Limpar o formulário
                             st.session_state.mostrar_form_investimento = False
-                            st.experimental_rerun()
+                            st.rerun()
                         else:
                             st.error("❌ Erro ao adicionar investimento. Por favor, verifique os dados e tente novamente.")
                     except Exception as e:
