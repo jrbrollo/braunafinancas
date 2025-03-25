@@ -79,8 +79,8 @@ def signup_user(email, password, nome):
         return False, "Cliente Supabase não está disponível"
     
     try:
-        # Compatível com supabase 1.0.3
-        response = supabase.auth.sign_up(
+        # Método correto para supabase 1.0.3
+        response = supabase.auth.sign_up_with_email_and_password(
             email=email,
             password=password,
             data={"nome": nome}
@@ -134,8 +134,8 @@ def login_user(email, password):
         return False, "Cliente Supabase não está disponível"
     
     try:
-        # Compatível com supabase 1.0.3
-        response = supabase.auth.sign_in(
+        # Método correto para supabase 1.0.3
+        response = supabase.auth.sign_in_with_email_and_password(
             email=email,
             password=password
         )
