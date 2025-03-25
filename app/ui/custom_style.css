@@ -14,7 +14,7 @@
   --border-light: #E0E0E0;
   --shadow: 0 4px 12px rgba(0,0,0,0.15);
   --card-radius: 8px;
-  --spacing: 16px;
+  --spacing: 12px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
@@ -84,7 +84,7 @@ div.stButton button:hover {
 
 /* Container principal */
 [data-testid="stAppViewBlockContainer"] {
-  padding: 30px !important;
+  padding: 20px !important;
 }
 
 /* Títulos */
@@ -96,18 +96,18 @@ h1, h2, h3, h4, h5, h6, p {
 h1 {
   font-size: 2rem !important;
   font-weight: 700 !important;
-  margin-bottom: 24px !important;
+  margin-bottom: 16px !important;
   color: var(--primary) !important;
   border-bottom: 3px solid var(--primary-light) !important;
-  padding-bottom: 10px !important;
+  padding-bottom: 8px !important;
   display: inline-block !important;
 }
 
 h2 {
   font-size: 1.5rem !important;
   font-weight: 600 !important;
-  margin-top: 20px !important;
-  margin-bottom: 16px !important;
+  margin-top: 16px !important;
+  margin-bottom: 12px !important;
   color: var(--primary-dark) !important;
 }
 
@@ -115,8 +115,8 @@ h2 {
 .card, div.css-12w0qpk.e1f1d6gn1 {
   background-color: white !important;
   border-radius: var(--card-radius) !important;
-  padding: 20px !important;
-  margin-bottom: 24px !important;
+  padding: 15px !important;
+  margin-bottom: 16px !important;
   box-shadow: var(--shadow) !important;
   border: none !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
@@ -129,10 +129,10 @@ h2 {
 
 /* Métricas */
 .metric-value {
-  font-size: 1.8rem !important;
+  font-size: 1.6rem !important;
   font-weight: 800 !important;
   color: var(--primary) !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 4px !important;
 }
 
 .metric-value.positive {
@@ -144,10 +144,10 @@ h2 {
 }
 
 .metric-label {
-  font-size: 1rem !important;
+  font-size: 0.9rem !important;
   font-weight: 600 !important;
   color: #555 !important;
-  margin-bottom: 4px !important;
+  margin-bottom: 3px !important;
 }
 
 /* Botões de ação */
@@ -156,7 +156,7 @@ h2 {
   color: white !important;
   border: none !important;
   border-radius: 8px !important;
-  padding: 10px 18px !important;
+  padding: 8px 16px !important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3) !important;
@@ -176,19 +176,19 @@ table, .dataframe {
   border-radius: 8px !important;
   overflow: hidden !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-  margin-bottom: 24px !important;
+  margin-bottom: 16px !important;
 }
 
 table th {
   background-color: var(--primary) !important;
   color: white !important;
-  padding: 12px 16px !important;
+  padding: 10px 14px !important;
   text-align: left !important;
   font-weight: 600 !important;
 }
 
 table td {
-  padding: 10px 16px !important;
+  padding: 8px 14px !important;
   border-bottom: 1px solid var(--border-light) !important;
 }
 
@@ -244,26 +244,27 @@ table tr:hover {
 
 /* Correções para layout específico */
 .element-container {
-  margin-bottom: 1rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 /* Alinhamento de colunas */
 [data-testid="column"] {
-  padding: 0 8px !important;
+  padding: 0.5rem !important;
 }
 
 [data-testid="stVerticalBlock"] > div:not(.element-container) {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+  margin-bottom: 0.5rem !important;
 }
 
 /* Badges de status */
 .badge {
   display: inline-block !important;
-  padding: 4px 12px !important;
-  border-radius: 50px !important;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  border-radius: 12px !important;
+  font-size: 0.75rem !important;
+  margin-right: 8px !important;
 }
 
 .badge-success {
@@ -274,7 +275,7 @@ table tr:hover {
 
 .badge-warning {
   background-color: rgba(255, 193, 7, 0.15) !important;
-  color: #b7860b !important;
+  color: #FF9800 !important;
   border: 1px solid rgba(255, 193, 7, 0.3) !important;
 }
 
@@ -293,9 +294,9 @@ table tr:hover {
 .chart-container {
   background-color: white;
   border-radius: var(--card-radius);
-  padding: 20px;
+  padding: 15px;
   box-shadow: var(--shadow);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border-left: 5px solid var(--primary);
 }
 
@@ -320,8 +321,8 @@ table tr:hover {
 .stats-container {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing);
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .stat-item {
@@ -329,7 +330,7 @@ table tr:hover {
   min-width: 200px;
   background: linear-gradient(135deg, white, #f9f9f9);
   border-radius: var(--card-radius);
-  padding: 20px;
+  padding: 12px;
   box-shadow: var(--shadow);
   text-align: center;
   border-top: 4px solid var(--primary);
@@ -341,14 +342,14 @@ table tr:hover {
 }
 
 .stat-value {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--primary);
   margin: 10px 0;
 }
 
 .stat-label {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-dark);
   opacity: 0.8;
   font-weight: 600;
@@ -371,4 +372,62 @@ div.stButton > button:first-child {
 
 [data-testid="stHeader"] {
   display: none !important;
+}
+
+/* Ajustes para o layout do dashboard */
+.dashboard-row {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.dashboard-card-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Ajustes para gráficos mais compactos */
+[data-testid="stHorizontalBlock"] {
+  gap: 8px !important;
+}
+
+/* Reduz espaço vertical entre blocos */
+div.block-container {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  max-width: 100% !important;
+}
+
+/* Ajustes específicos para visualizações do dashboard */
+h2.card-title {
+  margin-top: 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Ajusta altura de gráficos para serem mais compactos */
+.js-plotly-plot, .plotly, .plot-container {
+  height: auto !important;
+  min-height: 250px !important;
+}
+
+/* Reduz espaçamento entre categorias de gastos */
+.categoria-item {
+  margin-bottom: 8px !important;
+}
+
+/* Reduz espaço entre componentes no layout fluído */
+div.stVerticalBlock {
+  gap: 0.5rem !important;
+}
+
+/* Reduz margens em elementos expander */
+div.streamlit-expanderHeader {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Melhora espaçamento em colunas aninhadas */
+div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
 } 

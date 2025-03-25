@@ -211,7 +211,7 @@ def render_dashboard_page():
     
     with col1:
         st.markdown(f"""
-        <div class="card">
+        <div class="card dashboard-card">
             <div class="card-title">Patrimônio Líquido</div>
             <div class="metric-value{'positive' if patrimonio_liquido >= 0 else ' negative'}">{formatar_moeda(patrimonio_liquido)}</div>
             <div>Investimentos - Dívidas</div>
@@ -220,7 +220,7 @@ def render_dashboard_page():
     
     with col2:
         st.markdown(f"""
-        <div class="card">
+        <div class="card dashboard-card">
             <div class="card-title">Investimentos</div>
             <div class="metric-value positive">{formatar_moeda(total_investimentos)}</div>
             <div>{len(investimentos)} ativos</div>
@@ -229,7 +229,7 @@ def render_dashboard_page():
     
     with col3:
         st.markdown(f"""
-        <div class="card">
+        <div class="card dashboard-card">
             <div class="card-title">Dívidas</div>
             <div class="metric-value negative">{formatar_moeda(total_dividas)}</div>
             <div>{len(dividas)} pendentes</div>
@@ -238,7 +238,7 @@ def render_dashboard_page():
     
     with col4:
         st.markdown(f"""
-        <div class="card">
+        <div class="card dashboard-card">
             <div class="card-title">Gastos do Mês</div>
             <div class="metric-value">{formatar_moeda(total_gastos_mes)}</div>
             <div>{len(gastos_mes)} transações</div>
@@ -281,13 +281,14 @@ def render_dashboard_page():
                 df_inv, 
                 values='Valor', 
                 names='Categoria',
-                color_discrete_sequence=px.colors.sequential.Blues,
+                color_discrete_sequence=px.colors.sequential.Greens,
                 hole=0.4
             )
             
             fig.update_layout(
-                margin=dict(t=20, b=20, l=20, r=20),
-                legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5)
+                margin=dict(t=10, b=10, l=10, r=10),
+                height=300,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
             )
             
             fig.update_traces(
@@ -351,25 +352,26 @@ def render_dashboard_page():
                 x=df_obj['Atual'],
                 y=df_obj['Objetivo'],
                 orientation='h',
-                marker=dict(color='#2A5CAA'),
-                text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}%"),
-                textposition='auto',
+                marker=dict(color='#2196F3'),
                 name='Progresso',
-                hovertemplate='<b>%{y}</b><br>Atual: R$ %{x:,.2f}<br>Percentual: %{text}'
+                hovertemplate='<b>%{y}</b><br>Progresso: %{x:,.2f} (%{text}%)<extra></extra>',
+                text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}"),
             ))
             
+            # Atualizar layout do gráfico
             fig.update_layout(
                 barmode='overlay',
-                yaxis=dict(
-                    title='',
-                    tickfont=dict(size=12)
-                ),
                 xaxis=dict(
                     title='Valor (R$)',
-                    tickformat=',.0f'
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.1)'
                 ),
-                margin=dict(t=20, b=20, l=20, r=20),
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                yaxis=dict(
+                    title='',
+                    autorange="reversed"
+                ),
+                height=300,
+                margin=dict(t=10, b=10, l=10, r=10)
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -429,7 +431,8 @@ def render_dashboard_page():
                 yaxis_title="Valor (R$)",
                 xaxis_title="",
                 coloraxis_showscale=False,
-                margin=dict(t=20, b=20, l=20, r=20)
+                height=300,
+                margin=dict(t=10, b=10, l=10, r=10)
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -484,51 +487,34 @@ def render_dashboard_page():
                 except (ValueError, TypeError):
                     continue
         
-        # Ordenar por dias restantes (do menor para o maior)
+        # Ordenar por proximidade da data
         vencimentos.sort(key=lambda x: x["dias_restantes"])
         
         if vencimentos:
-            # Mostrar lista de vencimentos próximos
-            st.markdown("""
-            <div class="styled-table-container" style="max-height: 300px; overflow-y: auto;">
-                <table class="styled-table">
-                    <thead>
-                        <tr>
-                            <th>Tipo</th>
-                            <th>Descrição</th>
-                            <th>Vencimento</th>
-                            <th>Dias</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            """, unsafe_allow_html=True)
-            
-            for venc in vencimentos:
-                # Determinar classe de status com base nos dias restantes
-                if venc["dias_restantes"] <= 3:
-                    status_class = "badge-danger"
-                    status_text = "Urgente"
-                elif venc["dias_restantes"] <= 7:
-                    status_class = "badge-warning"
-                    status_text = "Próximo"
-                else:
-                    status_class = "badge-success"
-                    status_text = "OK"
+            # Criar uma tabela de vencimentos
+            vencimentos_html = ""
+            for v in vencimentos:
+                tipo_badge = "danger" if v["tipo"] == "Dívida" else "warning"
+                dias_badge = "danger" if v["dias_restantes"] <= 7 else "warning" if v["dias_restantes"] <= 15 else "success"
                 
-                st.markdown(f"""
-                    <tr>
-                        <td>{venc["tipo"]}</td>
-                        <td>{venc["descricao"]}</td>
-                        <td>{venc["data"].strftime("%d/%m/%Y")}</td>
-                        <td><span class="badge {status_class}">{venc["dias_restantes"]} dias</span></td>
-                        <td>{formatar_moeda(venc["valor"])}</td>
-                    </tr>
-                """, unsafe_allow_html=True)
+                vencimentos_html += f"""
+                <div style="display: flex; align-items: center; margin-bottom: 10px; padding: 8px; background-color: rgba(0,0,0,0.02); border-radius: 5px;">
+                    <div style="flex: 0 0 auto; margin-right: 10px;">
+                        <span class="badge badge-{tipo_badge}">{v["tipo"]}</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">{v["descricao"]}</div>
+                        <div style="font-size: 0.85rem; color: #666;">{v["data"].strftime("%d/%m/%Y")} • {formatar_moeda(v["valor"])}</div>
+                    </div>
+                    <div style="flex: 0 0 auto;">
+                        <span class="badge badge-{dias_badge}">{v["dias_restantes"]} dias</span>
+                    </div>
+                </div>
+                """
             
-            st.markdown("""
-                    </tbody>
-                </table>
+            st.markdown(f"""
+            <div style="max-height: 300px; overflow-y: auto;">
+                {vencimentos_html}
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -542,7 +528,7 @@ def render_dashboard_page():
     st.markdown("""
     <h2 class="card-title">Ações Rápidas</h2>
     <div class="card">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;">
     """, unsafe_allow_html=True)
     
     # Usar colunas para criar botões de ação rápida
