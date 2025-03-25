@@ -250,16 +250,16 @@ def render_dashboard_page():
     with col1:
         st.markdown(f"""
         <div class="card dashboard-card">
-            <div class="card-title">Patrimônio Líquido</div>
+            <div class="metric-label">Patrimônio Líquido</div>
             <div class="metric-value{'positive' if patrimonio_liquido >= 0 else ' negative'}">{formatar_moeda(patrimonio_liquido)}</div>
-            <div>Investimentos - Dívidas</div>
+            <div>{len(investimentos)} ativos - {len(dividas)} dívidas</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
         <div class="card dashboard-card">
-            <div class="card-title">Investimentos</div>
+            <div class="metric-label">Investimentos</div>
             <div class="metric-value positive">{formatar_moeda(total_investimentos)}</div>
             <div>{len(investimentos)} ativos</div>
         </div>
@@ -268,7 +268,7 @@ def render_dashboard_page():
     with col3:
         st.markdown(f"""
         <div class="card dashboard-card">
-            <div class="card-title">Dívidas</div>
+            <div class="metric-label">Dívidas</div>
             <div class="metric-value negative">{formatar_moeda(total_dividas)}</div>
             <div>{len(dividas)} pendentes</div>
         </div>
@@ -277,7 +277,7 @@ def render_dashboard_page():
     with col4:
         st.markdown(f"""
         <div class="card dashboard-card">
-            <div class="card-title">Gastos do Mês</div>
+            <div class="metric-label">Gastos do Mês</div>
             <div class="metric-value">{formatar_moeda(total_gastos_mes)}</div>
             <div>{len(gastos_mes)} transações</div>
         </div>
