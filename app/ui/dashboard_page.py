@@ -170,6 +170,9 @@ def render_dashboard_page():
     """
     Renderiza a página de dashboard principal
     """
+    # Forçar recarga dos gráficos
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    
     st.title("Dashboard")
     
     # Buscar dados para o dashboard
@@ -178,6 +181,34 @@ def render_dashboard_page():
     dividas = load_dividas()
     gastos = load_gastos()
     seguros = load_seguros()
+    
+    # Adicionar estilos CSS diretos para a página
+    st.markdown("""
+    <style>
+    /* Containers de gráficos - Estilos injetados diretamente */
+    .grafico-container {
+      background-color: white !important;
+      border-radius: 10px !important; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+      margin-bottom: 20px !important;
+      overflow: hidden !important;
+    }
+    
+    .titulo-grafico {
+      font-size: 1.1rem !important;
+      font-weight: 600 !important;
+      color: #2A5CAA !important;
+      padding: 16px !important;
+      background-color: #f8f9fa !important;
+      border-bottom: 1px solid #e9ecef !important;
+      margin: 0 !important;
+    }
+    
+    .conteudo-grafico {
+      padding: 16px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Seção de ações rápidas no topo com título
     st.markdown("""
@@ -292,11 +323,11 @@ def render_dashboard_page():
     col1, col2 = st.columns(2)
     
     with col1:
-        # Card único contendo título e gráfico
+        # Novo método para renderizar os gráficos
         st.markdown("""
-        <div class="chart-container">
-            <div class="card-title">Distribuição de Investimentos</div>
-            <div class="chart-content">
+        <div class="grafico-container">
+            <div class="titulo-grafico">Distribuição de Investimentos</div>
+            <div class="conteudo-grafico">
         """, unsafe_allow_html=True)
         
         # Preparar dados para o gráfico de pizza de investimentos
@@ -322,7 +353,8 @@ def render_dashboard_page():
                 values='Valor', 
                 names='Categoria',
                 color_discrete_sequence=px.colors.qualitative.Pastel1,
-                hole=0.6
+                hole=0.6,
+                template="plotly_white"
             )
             
             fig.update_layout(
@@ -334,7 +366,7 @@ def render_dashboard_page():
                     y=-0.2, 
                     xanchor="center", 
                     x=0.5,
-                    font=dict(size=11)
+                    font=dict(size=11, family="Arial, sans-serif")
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
@@ -362,7 +394,13 @@ def render_dashboard_page():
                 showarrow=False
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            # Configurações adicionais para garantir a aparência correta
+            config = {
+                'displayModeBar': False,
+                'responsive': True
+            }
+            
+            st.plotly_chart(fig, use_container_width=True, config=config)
         else:
             st.info("Adicione investimentos para visualizar a distribuição.")
         
@@ -374,9 +412,9 @@ def render_dashboard_page():
     with col2:
         # Card único contendo título e gráfico
         st.markdown("""
-        <div class="chart-container">
-            <div class="card-title">Progresso dos Objetivos</div>
-            <div class="chart-content">
+        <div class="grafico-container">
+            <div class="titulo-grafico">Progresso dos Objetivos</div>
+            <div class="conteudo-grafico">
         """, unsafe_allow_html=True)
         
         if objetivos:
@@ -484,10 +522,17 @@ def render_dashboard_page():
                     bgcolor="white",
                     font_size=12,
                     font_family="Arial, sans-serif"
-                )
+                ),
+                template="plotly_white"
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            # Configurações adicionais para garantir a aparência correta
+            config = {
+                'displayModeBar': False,
+                'responsive': True
+            }
+            
+            st.plotly_chart(fig, use_container_width=True, config=config)
         else:
             st.info("Adicione objetivos para visualizar o progresso.")
         
@@ -502,9 +547,9 @@ def render_dashboard_page():
     with col1:
         # Card único contendo título e gráfico
         st.markdown("""
-        <div class="chart-container">
-            <div class="card-title">Gastos por Categoria</div>
-            <div class="chart-content">
+        <div class="grafico-container">
+            <div class="titulo-grafico">Gastos por Categoria</div>
+            <div class="conteudo-grafico">
         """, unsafe_allow_html=True)
         
         if gastos_mes:
@@ -534,7 +579,8 @@ def render_dashboard_page():
                 y='Valor',
                 color='Valor',
                 color_continuous_scale=["#FFCDD2", "#E53935"],
-                text='Valor'
+                text='Valor',
+                template="plotly_white"
             )
             
             fig.update_traces(
@@ -574,7 +620,13 @@ def render_dashboard_page():
                 )
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            # Configurações adicionais para garantir a aparência correta
+            config = {
+                'displayModeBar': False,
+                'responsive': True
+            }
+            
+            st.plotly_chart(fig, use_container_width=True, config=config)
         else:
             st.info("Adicione gastos no mês atual para visualizar a distribuição por categoria.")
         
@@ -586,14 +638,9 @@ def render_dashboard_page():
     with col2:
         # Card único contendo título e vencimentos
         st.markdown("""
-        <div class="chart-container">
-            <div class="card-title">Vencimentos Próximos</div>
-            <div class="chart-content">
-        """, unsafe_allow_html=True)
-        
-        # Container para vencimentos
-        st.markdown("""
-        <div class="vencimentos-container">
+        <div class="grafico-container">
+            <div class="titulo-grafico">Vencimentos Próximos</div>
+            <div class="conteudo-grafico">
         """, unsafe_allow_html=True)
         
         # Combinar dívidas e seguros para mostrar próximos vencimentos
@@ -637,6 +684,11 @@ def render_dashboard_page():
         # Ordenar por proximidade da data
         vencimentos.sort(key=lambda x: x["dias_restantes"])
         
+        # Container para vencimentos
+        st.markdown("""
+        <div style="max-height: 280px; overflow-y: auto; border-radius: 4px; padding: 0; margin: 0;">
+        """, unsafe_allow_html=True)
+        
         if vencimentos:
             # Criar uma tabela de vencimentos
             vencimentos_html = ""
@@ -645,16 +697,47 @@ def render_dashboard_page():
                 dias_badge = "danger" if v["dias_restantes"] <= 7 else "warning" if v["dias_restantes"] <= 15 else "success"
                 
                 vencimentos_html += f"""
-                <div class="vencimento-item">
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    padding: 12px;
+                    background-color: rgba(0,0,0,0.02);
+                    border-radius: 8px;
+                    border-left: 4px solid {'#EF5350' if tipo_badge == 'danger' else '#FFD700'};
+                    transition: all 0.2s ease;
+                ">
                     <div style="flex: 0 0 auto; margin-right: 10px;">
-                        <span class="badge badge-{tipo_badge}">{v["tipo"]}</span>
+                        <span style="
+                            display: inline-block;
+                            padding: 4px 8px;
+                            border-radius: 30px;
+                            font-size: 0.7rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            background-color: {'#EF5350' if tipo_badge == 'danger' else '#FFD700'};
+                            color: {'white' if tipo_badge == 'danger' else '#333'};
+                            box-shadow: 0 1px 3px rgba({'239, 83, 80' if tipo_badge == 'danger' else '255, 215, 0'}, 0.3);
+                        ">{v["tipo"]}</span>
                     </div>
                     <div style="flex: 1;">
                         <div style="font-weight: 600;">{v["descricao"]}</div>
                         <div style="font-size: 0.85rem; color: #666;">{v["data"].strftime("%d/%m/%Y")} • {formatar_moeda(v["valor"])}</div>
                     </div>
                     <div style="flex: 0 0 auto;">
-                        <span class="badge badge-{dias_badge}">{v["dias_restantes"]} dias</span>
+                        <span style="
+                            display: inline-block;
+                            padding: 4px 8px;
+                            border-radius: 30px;
+                            font-size: 0.7rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            background-color: {'#EF5350' if dias_badge == 'danger' else '#FFD700' if dias_badge == 'warning' else '#4CAF50'};
+                            color: {'#333' if dias_badge == 'warning' else 'white'};
+                            box-shadow: 0 1px 3px rgba({'239, 83, 80' if dias_badge == 'danger' else '255, 215, 0' if dias_badge == 'warning' else '76, 175, 80'}, 0.3);
+                        ">{v["dias_restantes"]} dias</span>
                     </div>
                 </div>
                 """
