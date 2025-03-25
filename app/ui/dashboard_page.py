@@ -179,58 +179,44 @@ def render_dashboard_page():
     gastos = load_gastos()
     seguros = load_seguros()
     
-    # Seção de ações rápidas no topo
+    # Seção de ações rápidas no topo com título
     st.markdown("""
-    <div class="acao-rapida-container">
+    <h3 class="card-title">Ações Rápidas</h3>
+    <div class="acoes-rapidas-compact">
     """, unsafe_allow_html=True)
     
-    # Usar colunas para criar ícones de ação rápida
+    # Usar colunas para criar botões de ação rápida
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        if st.button("➕", help="Adicionar novo gasto"):
+        if st.button("➕ Novo Gasto", key="btn_gasto", help="Adicionar novo gasto"):
             st.session_state.pagina_atual = "gastos"
             st.session_state.mostrar_form_gasto = True
             st.rerun()
-        st.markdown("""
-        <div class="icon-text">Novo Gasto</div>
-        """, unsafe_allow_html=True)
     
     with col2:
-        if st.button("💰", help="Adicionar novo investimento"):
+        if st.button("💰 Investimento", key="btn_investimento", help="Adicionar novo investimento"):
             st.session_state.pagina_atual = "investimentos"
             st.session_state.mostrar_form_investimento = True
             st.rerun()
-        st.markdown("""
-        <div class="icon-text">Investimento</div>
-        """, unsafe_allow_html=True)
     
     with col3:
-        if st.button("🎯", help="Adicionar novo objetivo"):
+        if st.button("🎯 Objetivo", key="btn_objetivo", help="Adicionar novo objetivo"):
             st.session_state.pagina_atual = "objetivos"
             st.session_state.mostrar_form_objetivo = True
             st.rerun()
-        st.markdown("""
-        <div class="icon-text">Objetivo</div>
-        """, unsafe_allow_html=True)
     
     with col4:
-        if st.button("💳", help="Adicionar nova dívida"):
+        if st.button("💳 Dívida", key="btn_divida", help="Adicionar nova dívida"):
             st.session_state.pagina_atual = "dividas"
             st.session_state.mostrar_form_divida = True
             st.rerun()
-        st.markdown("""
-        <div class="icon-text">Dívida</div>
-        """, unsafe_allow_html=True)
     
     with col5:
-        if st.button("🔒", help="Adicionar novo seguro"):
+        if st.button("🔒 Seguro", key="btn_seguro", help="Adicionar novo seguro"):
             st.session_state.pagina_atual = "seguros"
             st.session_state.mostrar_form_seguro = True
             st.rerun()
-        st.markdown("""
-        <div class="icon-text">Seguro</div>
-        """, unsafe_allow_html=True)
     
     st.markdown("""
     </div>
