@@ -106,26 +106,34 @@ def render_investimentos_page():
                 if submitted:
                     # Criar novo investimento
                     novo_investimento = {
-                        "nome": descricao,
+                        "nome": descricao.strip(),  # Remover espaços em branco
                         "tipo": categoria,
                         "categoria": categoria.lower().replace(" ", "_"),
-                        "valor_inicial": valor_inicial,
-                        "valor_atual": valor_atual,
+                        "valor_inicial": float(valor_inicial),
+                        "valor_atual": float(valor_atual),
                         "data_inicio": data_inicio.strftime("%Y-%m-%d"),
-                        "rendimento_anual": rentabilidade_anual / 100,
+                        "rendimento_anual": float(rentabilidade_anual) / 100,
                         "instituicao": "",
                         "notas": ""
                     }
                     
-                    # Adicionar à lista
-                    if add_investimento(novo_investimento):
-                        # Recalcular progresso dos objetivos
-                        # Comentado temporariamente: calcular_progresso_objetivos()
-                        st.success("Investimento adicionado com sucesso!")
-                        st.session_state.mostrar_form_investimento = False
-                        st.rerun()
+                    # Validar campos obrigatórios
+                    if not descricao.strip():
+                        st.error("Por favor, informe a descrição do investimento.")
+                    elif valor_inicial <= 0:
+                        st.error("O valor inicial deve ser maior que zero.")
+                    elif valor_atual <= 0:
+                        st.error("O valor atual deve ser maior que zero.")
                     else:
-                        st.error("Erro ao adicionar investimento.")
+                        # Adicionar à lista
+                        if add_investimento(novo_investimento):
+                            # Recalcular progresso dos objetivos
+                            # Comentado temporariamente: calcular_progresso_objetivos()
+                            st.success("Investimento adicionado com sucesso!")
+                            st.session_state.mostrar_form_investimento = False
+                            st.rerun()
+                        else:
+                            st.error("Erro ao adicionar investimento. Por favor, verifique os dados informados.")
                 
                 if cancel:
                     st.session_state.mostrar_form_investimento = False

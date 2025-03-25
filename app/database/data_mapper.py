@@ -214,43 +214,69 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict: Investimento com campos normalizados
     """
-    inv_normalizado = investimento.copy()
-    
-    # Garantir ID
-    if 'id' not in inv_normalizado:
-        inv_normalizado['id'] = gerar_id()
-    
-    # Mapear campos para equivalentes
-    if 'descricao' in inv_normalizado and 'nome' not in inv_normalizado:
-        inv_normalizado['nome'] = inv_normalizado['descricao']
-    
-    if 'rendimento_anual' in inv_normalizado and 'rentabilidade_anual' not in inv_normalizado:
-        inv_normalizado['rentabilidade_anual'] = inv_normalizado['rendimento_anual']
-    
-    if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
-        inv_normalizado['data_inicio'] = inv_normalizado['data_inicial']
-    
-    if 'vencimento' in inv_normalizado and 'data_vencimento' not in inv_normalizado:
-        inv_normalizado['data_vencimento'] = inv_normalizado['vencimento']
-    
-    # Formatar datas
-    for campo_data in ['data_inicio', 'data_vencimento', 'data_resgate']:
-        if campo_data in inv_normalizado:
-            inv_normalizado[campo_data] = formatar_data(inv_normalizado[campo_data])
-    
-    # Valores padrão
-    if 'valor_atual' not in inv_normalizado and 'valor_inicial' in inv_normalizado:
-        inv_normalizado['valor_atual'] = inv_normalizado['valor_inicial']
-    
-    # Garantir categoria
-    if 'categoria' not in inv_normalizado:
-        inv_normalizado['categoria'] = "outros"
-    
-    # Garantir tipo
-    if 'tipo' not in inv_normalizado and 'categoria' in inv_normalizado:
-        inv_normalizado['tipo'] = inv_normalizado['categoria'].replace('_', ' ').title()
-    
-    return inv_normalizado
+    try:
+        inv_normalizado = investimento.copy()
+        
+        # Garantir ID
+        if 'id' not in inv_normalizado:
+            inv_normalizado['id'] = gerar_id()
+        
+        # Mapear campos para equivalentes
+        if 'descricao' in inv_normalizado and 'nome' not in inv_normalizado:
+            inv_normalizado['nome'] = inv_normalizado['descricao']
+        elif 'nome' in inv_normalizado and 'descricao' not in inv_normalizado:
+            inv_normalizado['descricao'] = inv_normalizado['nome']
+        
+        # Garantir que rendimento_anual e rentabilidade_anual existam
+        if 'rendimento_anual' in inv_normalizado:
+            inv_normalizado['rentabilidade_anual'] = float(inv_normalizado['rendimento_anual'])
+        elif 'rentabilidade_anual' in inv_normalizado:
+            inv_normalizado['rendimento_anual'] = float(inv_normalizado['rentabilidade_anual'])
+        
+        # Garantir campos de data
+        if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
+            inv_normalizado['data_inicio'] = inv_normalizado['data_inicial']
+        elif 'data_inicio' in inv_normalizado and 'data_inicial' not in inv_normalizado:
+            inv_normalizado['data_inicial'] = inv_normalizado['data_inicio']
+        
+        if 'vencimento' in inv_normalizado and 'data_vencimento' not in inv_normalizado:
+            inv_normalizado['data_vencimento'] = inv_normalizado['vencimento']
+        
+        # Formatar datas
+        for campo_data in ['data_inicio', 'data_inicial', 'data_vencimento', 'data_resgate']:
+            if campo_data in inv_normalizado:
+                inv_normalizado[campo_data] = formatar_data(inv_normalizado[campo_data])
+        
+        # Garantir valores numéricos
+        if 'valor_inicial' in inv_normalizado:
+            inv_normalizado['valor_inicial'] = float(inv_normalizado['valor_inicial'])
+        
+        if 'valor_atual' in inv_normalizado:
+            inv_normalizado['valor_atual'] = float(inv_normalizado['valor_atual'])
+        elif 'valor_inicial' in inv_normalizado:
+            inv_normalizado['valor_atual'] = float(inv_normalizado['valor_inicial'])
+        
+        # Garantir categoria e tipo
+        if 'categoria' not in inv_normalizado and 'tipo' in inv_normalizado:
+            inv_normalizado['categoria'] = inv_normalizado['tipo'].lower().replace(' ', '_')
+        elif 'categoria' not in inv_normalizado:
+            inv_normalizado['categoria'] = "outros"
+        
+        if 'tipo' not in inv_normalizado and 'categoria' in inv_normalizado:
+            inv_normalizado['tipo'] = inv_normalizado['categoria'].replace('_', ' ').title()
+        elif 'tipo' not in inv_normalizado:
+            inv_normalizado['tipo'] = "Outros"
+        
+        # Garantir campos vazios como strings vazias em vez de None
+        for campo in ['instituicao', 'notas']:
+            if campo not in inv_normalizado or inv_normalizado[campo] is None:
+                inv_normalizado[campo] = ""
+        
+        return inv_normalizado
+    except Exception as e:
+        print(f"Erro ao normalizar investimento: {e}")
+        print(f"Dados do investimento: {investimento}")
+        raise
 
 def normalizar_gasto(gasto: Dict[str, Any]) -> Dict[str, Any]:
     """

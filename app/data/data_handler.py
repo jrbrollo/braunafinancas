@@ -483,13 +483,20 @@ def add_investimento(investimento):
     """
     try:
         # Validar campos obrigatórios
-        if DATA_MAPPER_AVAILABLE and not validar_campos_obrigatorios(investimento, 'investimentos'):
-            print("Erro: campos obrigatórios ausentes no investimento")
+        campos_obrigatorios = ['nome', 'valor_inicial', 'valor_atual', 'data_inicio']
+        campos_faltantes = [campo for campo in campos_obrigatorios if campo not in investimento]
+        
+        if campos_faltantes:
+            print(f"Erro: campos obrigatórios ausentes no investimento: {campos_faltantes}")
             return False
             
         # Normalizar dados para garantir compatibilidade
         if DATA_MAPPER_AVAILABLE:
-            investimento = normalizar_investimento(investimento)
+            try:
+                investimento = normalizar_investimento(investimento)
+            except Exception as e:
+                print(f"Erro ao normalizar investimento: {e}")
+                return False
         else:
             # Adicionar ID único se não foi fornecido
             if "id" not in investimento:
@@ -506,9 +513,15 @@ def add_investimento(investimento):
         investimentos.append(investimento)
         
         # Salvar lista atualizada
-        return save_investimentos(investimentos)
+        if save_investimentos(investimentos):
+            return True
+        else:
+            print("Erro ao salvar lista de investimentos")
+            return False
+            
     except Exception as e:
         print(f"Erro ao adicionar investimento: {e}")
+        print(f"Dados do investimento: {investimento}")
         return False
 
 def add_divida(divida):
