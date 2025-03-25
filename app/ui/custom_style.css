@@ -384,7 +384,7 @@ table tr:hover {
 }
 
 .badge-warning {
-  background-color: var(--warning) !important;
+  background-color: #FFD700 !important;
   color: #333 !important;
 }
 
@@ -400,17 +400,20 @@ table tr:hover {
   padding: 20px !important;
   margin-bottom: 20px !important;
   box-shadow: var(--shadow) !important;
-  border-top: 4px solid var(--primary) !important;
-  background: linear-gradient(to bottom, #ffffff, #f9fafc) !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
 .chart-container .card-title {
-  font-size: 1.1rem !important;
+  font-size: 1.2rem !important;
   font-weight: 600 !important;
   color: var(--primary) !important;
+  margin-top: 0 !important;
   margin-bottom: 15px !important;
+  border-bottom: 2px solid var(--primary-light) !important;
   padding-bottom: 8px !important;
-  border-bottom: 1px solid #e0e0e0 !important;
 }
 
 /* Correções para layout específico */
@@ -762,4 +765,55 @@ h3.card-title {
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
   line-height: 1 !important;
+}
+
+/* Dashboard cards */
+.dashboard-card {
+  height: 100% !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+/* Melhorando o aspecto dos gráficos */
+[data-testid="stPlotlyChart"] {
+  margin-top: 10px !important;
+  background: white !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+/* Ajuste de altura para os gráficos do dashboard */
+[data-testid="stPlotlyChart"] > div {
+  min-height: 280px !important;
+}
+
+/* Estilizar os containers dos gráficos */
+.vencimentos-container {
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  border-radius: 4px !important;
+  background-color: white !important;
+}
+
+.vencimento-item {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 8px !important;
+  padding: 10px !important;
+  background-color: rgba(0,0,0,0.02) !important;
+  border-radius: 5px !important;
+  border-left: 4px solid var(--primary) !important;
+  transition: background-color 0.2s !important;
+}
+
+.vencimento-item:hover {
+  background-color: rgba(0,0,0,0.05) !important;
 } 

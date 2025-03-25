@@ -319,20 +319,31 @@ def render_dashboard_page():
                 df_inv, 
                 values='Valor', 
                 names='Categoria',
-                color_discrete_sequence=px.colors.sequential.Greens,
-                hole=0.4
+                color_discrete_sequence=px.colors.qualitative.Set2,
+                hole=0.5
             )
             
             fig.update_layout(
-                margin=dict(t=10, b=10, l=10, r=10),
-                height=300,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                margin=dict(t=0, b=0, l=0, r=0),
+                height=280,
+                legend=dict(
+                    orientation="h", 
+                    yanchor="bottom", 
+                    y=-0.2, 
+                    xanchor="center", 
+                    x=0.5,
+                    font=dict(size=11)
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
             
             fig.update_traces(
                 textposition='inside',
                 textinfo='percent+label',
-                hovertemplate='<b>%{label}</b><br>Valor: %{value:,.2f}<br>Percentual: %{percent}'
+                insidetextfont=dict(color='white', size=12),
+                hovertemplate='<b>%{label}</b><br>Valor: %{value:,.2f}<br>Percentual: %{percent}',
+                marker=dict(line=dict(color='white', width=2))
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -370,7 +381,7 @@ def render_dashboard_page():
             })
             
             # Ordenar por percentual de conclusão (do menor para o maior)
-            df_obj = df_obj.sort_values('Percentual', ascending=True)
+            df_obj = df_obj.sort_values('Percentual')
             
             # Gráfico de barras para objetivos
             fig = go.Figure()
@@ -380,7 +391,7 @@ def render_dashboard_page():
                 x=df_obj['Total'],
                 y=df_obj['Objetivo'],
                 orientation='h',
-                marker=dict(color='rgba(0, 0, 0, 0.1)'),
+                marker=dict(color='rgba(0, 0, 0, 0.08)'),
                 hoverinfo='none',
                 showlegend=False
             ))
@@ -390,7 +401,10 @@ def render_dashboard_page():
                 x=df_obj['Atual'],
                 y=df_obj['Objetivo'],
                 orientation='h',
-                marker=dict(color='#2196F3'),
+                marker=dict(
+                    color='#2196F3',
+                    line=dict(color='#1976D2', width=1)
+                ),
                 name='Progresso',
                 hovertemplate='<b>%{y}</b><br>Progresso: %{x:,.2f} (%{text}%)<extra></extra>',
                 text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}"),
@@ -402,14 +416,17 @@ def render_dashboard_page():
                 xaxis=dict(
                     title='Valor (R$)',
                     showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)'
+                    gridcolor='rgba(0,0,0,0.05)',
+                    zeroline=False
                 ),
                 yaxis=dict(
                     title='',
                     autorange="reversed"
                 ),
-                height=300,
-                margin=dict(t=10, b=10, l=10, r=10)
+                height=280,
+                margin=dict(t=0, b=0, l=0, r=10),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -449,19 +466,20 @@ def render_dashboard_page():
             # Ordenar por valor (do maior para o menor)
             df_gastos = df_gastos.sort_values('Valor', ascending=False)
             
-            # Gráfico de barras para gastos
+            # Gráfico de barras para gastos com estilo moderno
             fig = px.bar(
                 df_gastos, 
                 x='Categoria', 
                 y='Valor',
                 color='Valor',
-                color_continuous_scale=px.colors.sequential.Reds,
+                color_continuous_scale=px.colors.sequential.Reds_r,
                 text='Valor'
             )
             
             fig.update_traces(
-                texttemplate='R$ %{text:.2f}',
+                texttemplate='R$ %{text:,.0f}',
                 textposition='auto',
+                marker=dict(line=dict(width=1, color='#fff')),
                 hovertemplate='<b>%{x}</b><br>Valor: R$ %{y:,.2f}'
             )
             
@@ -469,8 +487,16 @@ def render_dashboard_page():
                 yaxis_title="Valor (R$)",
                 xaxis_title="",
                 coloraxis_showscale=False,
-                height=300,
-                margin=dict(t=10, b=10, l=10, r=10)
+                height=280,
+                margin=dict(t=0, b=0, l=0, r=0),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(showgrid=False),
+                yaxis=dict(
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.05)',
+                    zeroline=False
+                )
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -528,6 +554,10 @@ def render_dashboard_page():
         # Ordenar por proximidade da data
         vencimentos.sort(key=lambda x: x["dias_restantes"])
         
+        st.markdown("""
+        <div class="vencimentos-container">
+        """, unsafe_allow_html=True)
+        
         if vencimentos:
             # Criar uma tabela de vencimentos
             vencimentos_html = ""
@@ -536,7 +566,7 @@ def render_dashboard_page():
                 dias_badge = "danger" if v["dias_restantes"] <= 7 else "warning" if v["dias_restantes"] <= 15 else "success"
                 
                 vencimentos_html += f"""
-                <div style="display: flex; align-items: center; margin-bottom: 10px; padding: 8px; background-color: rgba(0,0,0,0.02); border-radius: 5px;">
+                <div class="vencimento-item">
                     <div style="flex: 0 0 auto; margin-right: 10px;">
                         <span class="badge badge-{tipo_badge}">{v["tipo"]}</span>
                     </div>
@@ -550,14 +580,11 @@ def render_dashboard_page():
                 </div>
                 """
             
-            st.markdown(f"""
-            <div style="max-height: 300px; overflow-y: auto;">
-                {vencimentos_html}
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"{vencimentos_html}", unsafe_allow_html=True)
         else:
             st.info("Não há vencimentos nos próximos 30 dias.")
         
         st.markdown("""
+        </div>
         </div>
         """, unsafe_allow_html=True)
