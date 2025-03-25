@@ -179,6 +179,63 @@ def render_dashboard_page():
     gastos = load_gastos()
     seguros = load_seguros()
     
+    # Seção de ações rápidas no topo
+    st.markdown("""
+    <div class="acao-rapida-container">
+    """, unsafe_allow_html=True)
+    
+    # Usar colunas para criar ícones de ação rápida
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("➕", help="Adicionar novo gasto"):
+            st.session_state.pagina_atual = "gastos"
+            st.session_state.mostrar_form_gasto = True
+            st.rerun()
+        st.markdown("""
+        <div class="icon-text">Novo Gasto</div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        if st.button("💰", help="Adicionar novo investimento"):
+            st.session_state.pagina_atual = "investimentos"
+            st.session_state.mostrar_form_investimento = True
+            st.rerun()
+        st.markdown("""
+        <div class="icon-text">Investimento</div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        if st.button("🎯", help="Adicionar novo objetivo"):
+            st.session_state.pagina_atual = "objetivos"
+            st.session_state.mostrar_form_objetivo = True
+            st.rerun()
+        st.markdown("""
+        <div class="icon-text">Objetivo</div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        if st.button("💳", help="Adicionar nova dívida"):
+            st.session_state.pagina_atual = "dividas"
+            st.session_state.mostrar_form_divida = True
+            st.rerun()
+        st.markdown("""
+        <div class="icon-text">Dívida</div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        if st.button("🔒", help="Adicionar novo seguro"):
+            st.session_state.pagina_atual = "seguros"
+            st.session_state.mostrar_form_seguro = True
+            st.rerun()
+        st.markdown("""
+        <div class="icon-text">Seguro</div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Seção de resumo financeiro
     st.markdown("""
     <h2 class="card-title">Resumo Financeiro</h2>
@@ -523,48 +580,3 @@ def render_dashboard_page():
         st.markdown("""
         </div>
         """, unsafe_allow_html=True)
-    
-    # Seção de ações rápidas
-    st.markdown("""
-    <h2 class="card-title">Ações Rápidas</h2>
-    <div class="card">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;">
-    """, unsafe_allow_html=True)
-    
-    # Usar colunas para criar botões de ação rápida
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        if st.button("➕ Novo Gasto", use_container_width=True):
-            st.session_state.pagina_atual = "gastos"
-            st.session_state.mostrar_form_gasto = True
-            st.rerun()
-    
-    with col2:
-        if st.button("💰 Novo Investimento", use_container_width=True):
-            st.session_state.pagina_atual = "investimentos"
-            st.session_state.mostrar_form_investimento = True
-            st.rerun()
-    
-    with col3:
-        if st.button("🎯 Novo Objetivo", use_container_width=True):
-            st.session_state.pagina_atual = "objetivos"
-            st.session_state.mostrar_form_objetivo = True
-            st.rerun()
-    
-    with col4:
-        if st.button("💳 Nova Dívida", use_container_width=True):
-            st.session_state.pagina_atual = "dividas"
-            st.session_state.mostrar_form_divida = True
-            st.rerun()
-    
-    with col5:
-        if st.button("🔒 Novo Seguro", use_container_width=True):
-            st.session_state.pagina_atual = "seguros"
-            st.session_state.mostrar_form_seguro = True
-            st.rerun()
-    
-    st.markdown("""
-        </div>
-    </div>
-    """, unsafe_allow_html=True) 

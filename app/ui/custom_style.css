@@ -430,4 +430,123 @@ div.streamlit-expanderHeader {
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+}
+
+/* Ações rápidas em ícones */
+.acoes-rapidas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.acao-rapida-icone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 5px;
+}
+
+.acao-rapida-icone:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.acao-rapida-icone .icone {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.acao-rapida-icone .texto {
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.acao-rapida-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.acao-rapida-btn {
+  background-color: white !important;
+  border-radius: 50% !important;
+  width: 60px !important;
+  height: 60px !important;
+  padding: 0 !important;
+  margin: 0 5px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  border: none !important;
+}
+
+.acao-rapida-btn:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.acao-rapida-btn .icone {
+  font-size: 24px !important;
+  margin-bottom: 2px !important;
+}
+
+.acao-rapida-btn .texto {
+  font-size: 9px !important;
+}
+
+/* Sobrescrever estilos de botão para ações rápidas */
+.acao-rapida-container button {
+  background-color: white !important;
+  color: var(--primary) !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 60px !important;
+  height: 60px !important;
+  min-width: unset !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+}
+
+.acao-rapida-container button:hover {
+  background-color: white !important;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2) !important;
+  transform: translateY(-3px) !important;
+}
+
+.icon-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.icon-emoji {
+  font-size: 20px !important;
+  margin-bottom: 4px !important;
+}
+
+.icon-text {
+  font-size: 9px !important;
+  text-align: center !important;
+  max-width: 100% !important;
+  line-height: 1 !important;
 } 
