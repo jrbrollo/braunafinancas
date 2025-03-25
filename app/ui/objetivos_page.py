@@ -218,7 +218,7 @@ def render_objetivos_page():
                             "valor_total": valor_total,
                             "valor_atual": valor_atual,
                             "categoria": categoria,
-                            "prioridade": prioridade,
+                            "prioridade": 1 if prioridade == "alta" else 2 if prioridade == "media" else 3,  # Converter para inteiro
                             "data_inicio": data_inicio.strftime("%Y-%m-%d"),
                             "data_alvo": data_alvo.strftime("%Y-%m-%d"),
                             "taxa_retorno": taxa_retorno / 100,  # Converter para decimal
@@ -282,9 +282,8 @@ def render_objetivos_page():
             st.subheader("Metas em andamento")
             
             # Ordenar objetivos por prioridade
-            prioridade_ordem = {"alta": 0, "media": 1, "baixa": 2}
             objetivos_ordenados = sorted(objetivos, key=lambda x: (
-                prioridade_ordem.get(x.get("prioridade", "baixa"), 999),
+                x.get("prioridade", 3),  # Ordenar por prioridade numérica (1=alta, 2=média, 3=baixa)
                 datetime.strptime(x.get("data_alvo", "2100-01-01"), "%Y-%m-%d")
             ))
             
@@ -347,7 +346,7 @@ def render_objetivos_page():
                     with col1:
                         st.markdown(f"**Categoria:** {obj.get('categoria', 'Não categorizado').title()}")
                         st.markdown(f"**Descrição:** {obj.get('descricao', 'Sem descrição')}")
-                        st.markdown(f"**Prioridade:** {'Alta' if obj.get('prioridade') == 'alta' else 'Média' if obj.get('prioridade') == 'media' else 'Baixa'}")
+                        st.markdown(f"**Prioridade:** {'Alta' if obj.get('prioridade') == 1 else 'Média' if obj.get('prioridade') == 2 else 'Baixa'}")
                         st.markdown(f"**Taxa de retorno estimada:** {obj.get('taxa_retorno', 0) * 100:.1f}% ao ano")
                     
                     with col2:
