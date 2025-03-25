@@ -160,14 +160,14 @@ def render_seguros_page():
                 if submitted:
                     # Criar novo seguro
                     novo_seguro = {
+                        "tipo": categoria,
                         "descricao": descricao,
-                        "categoria": categoria,
-                        "seguradora": seguradora,
-                        "premio_anual": premio_anual,
+                        "valor_premio": premio_anual,
                         "valor_cobertura": valor_cobertura,
-                        "data_contratacao": data_contratacao.strftime("%Y-%m-%d"),
+                        "data_inicio": data_contratacao.strftime("%Y-%m-%d"),
                         "data_vencimento": data_vencimento.strftime("%Y-%m-%d"),
-                        "observacoes": observacoes
+                        "seguradora": seguradora,
+                        "notas": observacoes
                     }
                     
                     # Adicionar à lista

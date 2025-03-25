@@ -38,13 +38,57 @@ MAPEAMENTO_SEGUROS = {
     'cobertura': 'valor_cobertura',
 }
 
-# Campos obrigatórios para cada entidade
-CAMPOS_OBRIGATORIOS = {
+# Mapeamentos de campos
+FIELD_MAPPINGS = {
+    'objetivos': {
+        'nome': 'nome',
+        'valor_total': 'valor_total',
+        'valor_atual': 'valor_atual',
+        'data_inicio': 'data_inicio',
+        'data_fim': 'data_fim'
+    },
+    'dividas': {
+        'descricao': 'descricao',
+        'valor_total': 'valor_total',
+        'valor_restante': 'valor_restante',
+        'valor_inicial': 'valor_inicial',
+        'valor_atual': 'valor_atual',
+        'data_inicio': 'data_inicio',
+        'data_vencimento': 'data_vencimento'
+    },
+    'investimentos': {
+        'descricao': 'nome',
+        'rendimento_anual': 'rentabilidade_anual',
+        'data_inicial': 'data_inicio',
+        'vencimento': 'data_vencimento'
+    },
+    'gastos': {
+        'descricao': 'descricao',
+        'valor': 'valor',
+        'data': 'data',
+        'data_gasto': 'data_gasto',
+        'tipo': 'tipo',
+        'categoria': 'categoria'
+    },
+    'seguros': {
+        'tipo': 'tipo',
+        'descricao': 'descricao',
+        'valor_premio': 'valor_premio',
+        'valor_cobertura': 'valor_cobertura',
+        'data_inicio': 'data_inicio',
+        'data_vencimento': 'data_vencimento',
+        'seguradora': 'seguradora',
+        'notas': 'notas'
+    }
+}
+
+# Campos obrigatórios por entidade
+REQUIRED_FIELDS = {
     'objetivos': ['nome', 'valor_total'],
     'dividas': ['descricao', 'valor_total'],
-    'investimentos': ['nome', 'valor_inicial', 'data_inicio'],
+    'investimentos': ['descricao', 'valor_inicial', 'categoria'],
     'gastos': ['descricao', 'valor'],
-    'seguros': ['tipo', 'descricao', 'valor_premio'],
+    'seguros': ['tipo', 'descricao', 'valor_premio']
 }
 
 def gerar_id() -> str:
@@ -87,10 +131,10 @@ def validar_campos_obrigatorios(dados: Dict[str, Any], entidade: str) -> bool:
     Returns:
         bool: True se válido, False caso contrário
     """
-    if entidade not in CAMPOS_OBRIGATORIOS:
+    if entidade not in REQUIRED_FIELDS:
         return True
         
-    for campo in CAMPOS_OBRIGATORIOS[entidade]:
+    for campo in REQUIRED_FIELDS[entidade]:
         if campo not in dados or dados[campo] is None:
             return False
             
@@ -325,25 +369,34 @@ def normalizar_seguro(seguro: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict: Seguro com campos normalizados
     """
-    seguro_normalizado = seguro.copy()
+    seg_normalizado = seguro.copy()
     
     # Garantir ID
-    if 'id' not in seguro_normalizado:
-        seguro_normalizado['id'] = gerar_id()
+    if 'id' not in seg_normalizado:
+        seg_normalizado['id'] = gerar_id()
     
     # Mapear campos para equivalentes
-    if 'valor' in seguro_normalizado and 'valor_premio' not in seguro_normalizado:
-        seguro_normalizado['valor_premio'] = seguro_normalizado['valor']
+    if 'premio_anual' in seg_normalizado and 'valor_premio' not in seg_normalizado:
+        seg_normalizado['valor_premio'] = seg_normalizado['premio_anual']
+        del seg_normalizado['premio_anual']
     
-    if 'cobertura' in seguro_normalizado and 'valor_cobertura' not in seguro_normalizado:
-        seguro_normalizado['valor_cobertura'] = seguro_normalizado['cobertura']
+    if 'data_contratacao' in seg_normalizado and 'data_inicio' not in seg_normalizado:
+        seg_normalizado['data_inicio'] = seg_normalizado['data_contratacao']
+        del seg_normalizado['data_contratacao']
     
     # Formatar datas
     for campo_data in ['data_inicio', 'data_vencimento']:
-        if campo_data in seguro_normalizado:
-            seguro_normalizado[campo_data] = formatar_data(seguro_normalizado[campo_data])
+        if campo_data in seg_normalizado:
+            seg_normalizado[campo_data] = formatar_data(seg_normalizado[campo_data])
     
-    return seguro_normalizado
+    # Valores padrão
+    if 'valor_cobertura' not in seg_normalizado:
+        seg_normalizado['valor_cobertura'] = 0.0
+    
+    if 'notas' not in seg_normalizado:
+        seg_normalizado['notas'] = ''
+    
+    return seg_normalizado
 
 def normalizar_dados(dados: Dict[str, Any], tipo_entidade: str) -> Dict[str, Any]:
     """

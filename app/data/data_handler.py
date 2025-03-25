@@ -370,15 +370,37 @@ def save_seguros(seguros):
     """
     Salva a lista de seguros.
     """
-    if is_prod():
-        st.session_state["seguros"] = seguros
-        return True
-    
     try:
-        os.makedirs(os.path.dirname(SEGUROS_FILE), exist_ok=True)
+        # Salvar no session state
+        st.session_state["seguros"] = seguros
         
-        with open(SEGUROS_FILE, 'w', encoding='utf-8') as file:
-            json.dump(seguros, file, ensure_ascii=False, indent=2)
+        # Tentar salvar no Supabase
+        user = get_current_user()
+        if user:
+            cliente = get_supabase_client()
+            if cliente:
+                # Remover dados existentes
+                cliente.table('seguros').delete().eq('user_id', user['id']).execute()
+                
+                # Inserir novos dados
+                if seguros:
+                    for seguro in seguros:
+                        seguro_supabase = seguro.copy()
+                        seguro_supabase['user_id'] = user['id']
+                        cliente.table('seguros').insert(seguro_supabase).execute()
+                
+                return True
+        
+        # Salvar no arquivo local como fallback
+        user_id = st.session_state.get("user_id", "default")
+        arquivo = f"data/seguros_{user_id}.json"
+        
+        # Criar diretório se não existir
+        os.makedirs(os.path.dirname(arquivo), exist_ok=True)
+        
+        with open(arquivo, "w", encoding="utf-8") as f:
+            json.dump(seguros, f, ensure_ascii=False, indent=4)
+        
         return True
     except Exception as e:
         print(f"Erro ao salvar seguros: {e}")
