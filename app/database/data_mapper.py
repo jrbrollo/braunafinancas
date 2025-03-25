@@ -42,7 +42,7 @@ MAPEAMENTO_SEGUROS = {
 CAMPOS_OBRIGATORIOS = {
     'objetivos': ['nome', 'valor_total'],
     'dividas': ['descricao', 'valor_total'],
-    'investimentos': ['descricao', 'valor_inicial', 'categoria'],
+    'investimentos': ['nome', 'valor_inicial', 'categoria'],
     'gastos': ['descricao', 'valor'],
     'seguros': ['tipo', 'descricao', 'valor_premio'],
 }
@@ -227,9 +227,7 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
         
         # Garantir que rendimento_anual e rentabilidade_anual existam
         if 'rendimento_anual' in inv_normalizado:
-            inv_normalizado['rentabilidade_anual'] = float(inv_normalizado['rendimento_anual'])
-        elif 'rentabilidade_anual' in inv_normalizado:
-            inv_normalizado['rendimento_anual'] = float(inv_normalizado['rentabilidade_anual'])
+            inv_normalizado['rentabilidade_anual'] = float(inv_normalizado.pop('rendimento_anual'))
         
         # Garantir campos de data
         if 'data_inicial' in inv_normalizado and 'data_inicio' not in inv_normalizado:
@@ -239,7 +237,7 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
             inv_normalizado['data_vencimento'] = inv_normalizado.pop('vencimento')
         
         # Formatar datas
-        for campo_data in ['data_inicio', 'data_vencimento', 'data_resgate']:
+        for campo_data in ['data_inicio', 'data_vencimento']:
             if campo_data in inv_normalizado:
                 inv_normalizado[campo_data] = formatar_data(inv_normalizado[campo_data])
         
@@ -269,8 +267,12 @@ def normalizar_investimento(investimento: Dict[str, Any]) -> Dict[str, Any]:
                 inv_normalizado[campo] = ""
         
         # Remover campos que não existem na tabela
-        campos_validos = ['id', 'nome', 'tipo', 'categoria', 'valor_inicial', 'valor_atual', 
-                         'data_inicio', 'rentabilidade_anual', 'instituicao', 'notas', 'user_id']
+        campos_validos = [
+            'id', 'user_id', 'nome', 'tipo', 'categoria', 
+            'valor_inicial', 'valor_atual', 'data_inicio', 
+            'data_vencimento', 'rentabilidade_anual', 
+            'instituicao', 'notas'
+        ]
         return {k: v for k, v in inv_normalizado.items() if k in campos_validos}
         
     except Exception as e:

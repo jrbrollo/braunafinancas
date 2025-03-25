@@ -104,36 +104,34 @@ def render_investimentos_page():
                     cancel = st.form_submit_button("❌ Cancelar", use_container_width=True)
                 
                 if submitted:
-                    # Criar novo investimento
-                    novo_investimento = {
-                        "nome": descricao.strip(),  # Remover espaços em branco
-                        "tipo": categoria,
-                        "categoria": categoria.lower().replace(" ", "_"),
-                        "valor_inicial": float(valor_inicial),
-                        "valor_atual": float(valor_atual),
-                        "data_inicio": data_inicio.strftime("%Y-%m-%d"),
-                        "rentabilidade_anual": float(rentabilidade_anual) / 100,
-                        "instituicao": "",
-                        "notas": ""
-                    }
-                    
-                    # Validar campos obrigatórios
-                    if not descricao.strip():
-                        st.error("Por favor, informe o nome do investimento.")
-                    elif valor_inicial <= 0:
-                        st.error("O valor inicial deve ser maior que zero.")
-                    elif valor_atual <= 0:
-                        st.error("O valor atual deve ser maior que zero.")
-                    else:
-                        # Adicionar à lista
+                    try:
+                        # Criar novo investimento
+                        novo_investimento = {
+                            "nome": descricao.strip(),  # Remover espaços em branco
+                            "tipo": categoria,
+                            "categoria": categoria.lower().replace(" ", "_"),
+                            "valor_inicial": float(valor_inicial),
+                            "valor_atual": float(valor_atual),
+                            "data_inicio": data_inicio.strftime("%Y-%m-%d"),
+                            "rentabilidade_anual": float(rentabilidade_anual) / 100,
+                            "instituicao": "",
+                            "notas": ""
+                        }
+                        
+                        # Adicionar data de vencimento se fornecida
+                        if data_vencimento:
+                            novo_investimento["data_vencimento"] = data_vencimento.strftime("%Y-%m-%d")
+                        
+                        # Tentar salvar o investimento
                         if add_investimento(novo_investimento):
-                            # Recalcular progresso dos objetivos
-                            # Comentado temporariamente: calcular_progresso_objetivos()
-                            st.success("Investimento adicionado com sucesso!")
-                            st.session_state.mostrar_form_investimento = False
-                            st.rerun()
+                            st.success("✅ Investimento adicionado com sucesso!")
+                            # Limpar o formulário
+                            st.experimental_rerun()
                         else:
-                            st.error("Erro ao adicionar investimento. Por favor, verifique os dados informados.")
+                            st.error("❌ Erro ao adicionar investimento. Por favor, verifique os dados e tente novamente.")
+                    except Exception as e:
+                        st.error(f"❌ Erro ao adicionar investimento: {str(e)}")
+                        print(f"Erro detalhado: {e}")
                 
                 if cancel:
                     st.session_state.mostrar_form_investimento = False
