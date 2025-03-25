@@ -183,7 +183,7 @@ def render_seguros_page():
                     st.rerun()
     
     # Calcular totais
-    total_premio_anual = sum(float(s.get("premio_anual", 0) or 0) for s in seguros)
+    total_premio_anual = sum(float(s.get("valor_premio", 0) or 0) for s in seguros)
     total_premio_mensal = total_premio_anual / 12 if total_premio_anual else 0
     total_cobertura = sum(float(s.get("valor_cobertura", 0) or 0) for s in seguros)
     
@@ -287,7 +287,7 @@ def render_seguros_page():
                         <div>Categoria: {seguro.get('categoria', 'Não categorizado')}</div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin: 10px 0;">
-                        <div>Prêmio anual: <strong>{formatar_moeda(seguro.get('premio_anual', 0))}</strong></div>
+                        <div>Prêmio anual: <strong>{formatar_moeda(seguro.get('valor_premio', 0))}</strong></div>
                         <div>Cobertura: <strong>{formatar_moeda(seguro.get('valor_cobertura', 0))}</strong></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; color: var(--gray); font-size: 0.9rem;">
@@ -382,7 +382,7 @@ def render_seguros_page():
                 <tr>
                     <td>{seguro.get('descricao', 'Seguro')}</td>
                     <td>{seguro.get('seguradora', 'Não informada')}</td>
-                    <td class="premio-coluna">{formatar_moeda(seguro.get('premio_anual', 0))}</td>
+                    <td class="premio-coluna">{formatar_moeda(seguro.get('valor_premio', 0))}</td>
                     <td class="data-coluna">{data_formatada}</td>
                     <td><div class="badge-vencimento {status_class}">{status_text}</div></td>
                 </tr>
@@ -401,7 +401,7 @@ def render_seguros_page():
         with col_excluir:
             st.subheader("Excluir Seguro")
             
-            opcoes_exclusao = [f"{s.get('descricao', 'Seguro sem nome')} - {formatar_moeda(s.get('premio_anual', 0))}" for s in seguros]
+            opcoes_exclusao = [f"{s.get('descricao', 'Seguro sem nome')} - {formatar_moeda(s.get('valor_premio', 0))}" for s in seguros]
             opcoes_dict = {opcao: i for i, opcao in enumerate(opcoes_exclusao)}
             
             seguro_para_excluir = st.selectbox(
@@ -463,7 +463,7 @@ def render_seguros_page():
                         )
                     
                     with col_premio:
-                        premio_atual = seguro_selecionado.get("premio_anual", 0)
+                        premio_atual = seguro_selecionado.get("valor_premio", 0)
                         novo_premio = st.number_input(
                             "Novo prêmio anual (R$):",
                             min_value=0.0,
@@ -476,7 +476,7 @@ def render_seguros_page():
                         # Atualizar o seguro com as novas informações
                         seguros[indice_original]["data_renovacao"] = datetime.now().strftime("%Y-%m-%d")
                         seguros[indice_original]["data_vencimento"] = nova_data_vencimento.strftime("%Y-%m-%d")
-                        seguros[indice_original]["premio_anual"] = novo_premio
+                        seguros[indice_original]["valor_premio"] = novo_premio
                         
                         # Salvar as alterações
                         save_seguros(seguros)
