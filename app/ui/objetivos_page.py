@@ -529,6 +529,7 @@ def render_objetivos_page():
                                 objetivo_atualizado = {
                                     "id": objetivo_id,
                                     "nome": nome,
+                                    "titulo": nome,  # Adicionando o campo título obrigatório
                                     "descricao": descricao,
                                     "valor_total": valor_total,
                                     "valor_atual": valor_atual,
