@@ -251,7 +251,7 @@ def render_dashboard_page():
         st.markdown(f"""
         <div class="card dashboard-card">
             <div class="metric-label">Patrimônio Líquido</div>
-            <div class="metric-value{'positive' if patrimonio_liquido >= 0 else ' negative'}">{formatar_moeda(patrimonio_liquido)}</div>
+            <div class="metric-value positive" style="color: {patrimonio_liquido >= 0 and 'var(--positive)' or 'var(--negative)'} !important;">{formatar_moeda(patrimonio_liquido)}</div>
             <div>{len(investimentos)} ativos - {len(dividas)} dívidas</div>
         </div>
         """, unsafe_allow_html=True)
