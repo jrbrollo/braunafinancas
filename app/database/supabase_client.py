@@ -42,6 +42,7 @@ def init_supabase_client():
         return None
     
     try:
+        # Utilizando a forma posicional em vez de parâmetros nomeados
         return create_client(supabase_url, supabase_key)
     except Exception as e:
         st.error(f"🚨 Erro ao conectar ao Supabase: {e}")
