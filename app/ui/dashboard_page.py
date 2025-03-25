@@ -182,7 +182,6 @@ def render_dashboard_page():
     # Seção de ações rápidas no topo com título
     st.markdown("""
     <h3 class="card-title">Ações Rápidas</h3>
-    <div class="acoes-rapidas-compact">
     """, unsafe_allow_html=True)
     
     # Usar colunas para criar botões de ação rápida
@@ -217,10 +216,6 @@ def render_dashboard_page():
             st.session_state.pagina_atual = "seguros"
             st.session_state.mostrar_form_seguro = True
             st.rerun()
-    
-    st.markdown("""
-    </div>
-    """, unsafe_allow_html=True)
     
     # Seção de resumo financeiro
     st.markdown("""
