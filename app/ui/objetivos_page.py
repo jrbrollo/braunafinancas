@@ -123,7 +123,6 @@ def render_objetivos_page():
                     valor_atual = st.number_input(
                         "Valor atual (R$)", 
                         min_value=0.0, 
-                        max_value=valor_total,
                         step=100.0,
                         format="%.2f",
                         help="Quanto você já tem guardado para este objetivo"
@@ -427,8 +426,6 @@ def render_objetivos_page():
                             valor_atual = st.number_input(
                                 "Valor atual (R$)", 
                                 min_value=0.0, 
-                                max_value=valor_total,
-                                value=float(objetivo.get("valor_atual", 0.0)),
                                 step=100.0,
                                 format="%.2f",
                                 help="Quanto você já tem guardado para este objetivo"
