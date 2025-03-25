@@ -78,51 +78,70 @@ def signup_user(email, password, nome):
     if not supabase:
         return False, "Cliente Supabase não está disponível"
     
-    try:
-        # Método correto para supabase 1.0.3
-        response = supabase.auth.sign_up(
-            {
-                "email": email,
-                "password": password,
-                "options": {
-                    "data": {
-                        "nome": nome
-                    }
-                }
+    # Dados de cadastro em formato padrão para versão 2.x
+    signup_data_v2 = {
+        "email": email,
+        "password": password,
+        "options": {
+            "data": {
+                "nome": nome
             }
-        )
-        
-        if response.user and response.user.id:
-            try:
-                # Converter o datetime para string ISO format
-                created_at_str = response.user.created_at.isoformat() if hasattr(response.user, 'created_at') else None
-                
-                # Verificar se a tabela perfis existe
-                try:
-                    # Inserir dados adicionais do usuário na tabela 'perfis'
-                    supabase.table("perfis").insert({
-                        "id": response.user.id,
-                        "nome": nome,
-                        "email": email,
-                        "created_at": created_at_str
-                    }).execute()
-                except Exception as perfil_error:
-                    # Se falhar ao inserir no perfil, ainda podemos retornar sucesso no cadastro
-                    st.warning(f"Usuário criado, mas falha ao criar perfil: {str(perfil_error)}")
-                
-                return True, response.user
-            except Exception as perfil_error:
-                # Log do erro ao criar perfil, mas ainda retornamos sucesso no cadastro
-                st.warning(f"Erro ao salvar dados do perfil: {str(perfil_error)}")
-                return True, response.user
-        else:
-            return False, "Erro ao criar usuário: Resposta incompleta do Supabase"
+        }
+    }
     
-    except Exception as e:
-        # Melhorar o log de erro
-        error_message = f"Erro ao criar conta: {str(e)}"
-        st.error(error_message)
-        return False, error_message
+    # Dados de cadastro em formato padrão para versão 1.x
+    signup_data_v1 = {
+        "email": email,
+        "password": password,
+        "data": {
+            "nome": nome
+        }
+    }
+    
+    # Tentar diferentes métodos de cadastro
+    methods_to_try = [
+        # Método para versão 2.x
+        lambda: supabase.auth.sign_up(signup_data_v2),
+        # Método alternativo para versão 2.x
+        lambda: supabase.auth.sign_up(email=email, password=password, options={"data": {"nome": nome}}),
+        # Método para versão 1.x
+        lambda: supabase.auth.sign_up(signup_data_v1),
+        # Método alternativo para versão 1.x
+        lambda: supabase.auth.sign_up(email=email, password=password, data={"nome": nome})
+    ]
+    
+    for method in methods_to_try:
+        try:
+            response = method()
+            
+            if response and hasattr(response, 'user') and response.user and response.user.id:
+                try:
+                    # Converter o datetime para string ISO format
+                    created_at_str = response.user.created_at.isoformat() if hasattr(response.user, 'created_at') else None
+                    
+                    # Inserir dados adicionais do usuário na tabela 'perfis'
+                    try:
+                        supabase.table("perfis").insert({
+                            "id": response.user.id,
+                            "nome": nome,
+                            "email": email,
+                            "created_at": created_at_str
+                        }).execute()
+                    except Exception as perfil_error:
+                        # Se falhar ao inserir no perfil, ainda podemos retornar sucesso no cadastro
+                        st.warning(f"Usuário criado, mas falha ao criar perfil: {str(perfil_error)}")
+                    
+                    return True, response.user
+                except Exception as perfil_error:
+                    # Log do erro ao criar perfil, mas ainda retornamos sucesso no cadastro
+                    st.warning(f"Erro ao salvar dados do perfil: {str(perfil_error)}")
+                    return True, response.user
+        except Exception as e:
+            # Continuar tentando outros métodos se este falhar
+            last_error = str(e)
+            continue
+    
+    return False, f"Erro ao criar conta: {last_error}"
 
 def login_user(email, password):
     """
@@ -139,27 +158,41 @@ def login_user(email, password):
     if not supabase:
         return False, "Cliente Supabase não está disponível"
     
-    try:
-        # Método correto para supabase 1.0.3
-        response = supabase.auth.sign_in(
-            {
-                "email": email,
-                "password": password
-            }
-        )
-        
-        if response.user:
-            user_data = {
-                "id": response.user.id,
-                "email": response.user.email,
-                "nome": response.user.user_metadata.get("nome", "Usuário")
-            }
-            return True, user_data
-        else:
-            return False, "Usuário ou senha inválidos"
+    # Dados de autenticação em formato padrão
+    auth_data = {
+        "email": email,
+        "password": password
+    }
     
-    except Exception as e:
-        return False, str(e)
+    # Tentar diferentes métodos de autenticação
+    methods_to_try = [
+        # Método para versão 2.x
+        lambda: supabase.auth.sign_in_with_password(auth_data),
+        # Método alternativo para versão 2.x
+        lambda: supabase.auth.sign_in_with_password(email=email, password=password),
+        # Método para versão 1.x
+        lambda: supabase.auth.sign_in(auth_data),
+        # Método alternativo para versão 1.x
+        lambda: supabase.auth.sign_in(email=email, password=password)
+    ]
+    
+    for method in methods_to_try:
+        try:
+            response = method()
+            
+            if response and hasattr(response, 'user') and response.user:
+                user_data = {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "nome": response.user.user_metadata.get("nome", "Usuário")
+                }
+                return True, user_data
+        except Exception as e:
+            # Continuar tentando outros métodos se este falhar
+            last_error = str(e)
+            continue
+    
+    return False, f"Erro de autenticação: {last_error}"
 
 def logout_user():
     """
