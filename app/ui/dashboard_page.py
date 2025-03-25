@@ -170,9 +170,6 @@ def render_dashboard_page():
     """
     Renderiza a página de dashboard principal
     """
-    # Forçar recarga dos gráficos
-    st.set_option('deprecation.showPyplotGlobalUse', False)
-    
     st.title("Dashboard")
     
     # Buscar dados para o dashboard
