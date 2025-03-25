@@ -426,8 +426,7 @@ def render_dashboard_page():
                 for atual, total in zip(valores_atual, valores_total)
             ]
             
-            # Criar versão mais divertida com ícones
-            objetivos_html = ""
+            # Usar componentes nativos do Streamlit em vez de HTML
             for i, (nome, atual, total, percentual) in enumerate(zip(nomes_obj, valores_atual, valores_total, percentuais)):
                 # Definir cores baseadas no progresso
                 cor_barra = "#1976D2"  # Azul padrão
@@ -439,7 +438,6 @@ def render_dashboard_page():
                     cor_barra = "#F44336"  # Vermelho para progresso baixo
                 
                 # Definir ícone de conclusão baseado no progresso
-                icone_conclusao = "🏆"  # Troféu para todos
                 if percentual >= 100:
                     icone_status = "✨"  # Estrela para objetivo concluído
                 elif percentual >= 75:
@@ -451,105 +449,49 @@ def render_dashboard_page():
                 else:
                     icone_status = "🏁"  # Bandeira de início para progresso muito baixo
                 
-                # HTML para o item de objetivo
-                objetivos_html += f"""
-                <div style="margin-bottom: 24px; position: relative;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <div style="font-weight: 600; font-size: 14px; color: #333;">{nome}</div>
-                        <div style="font-weight: 600; font-size: 14px; color: {cor_barra};">{percentual:.0f}%</div>
+                # Criar linhas para cada objetivo
+                st.markdown(f"### {nome} - {percentual:.0f}%", help=f"{formatar_moeda(atual)} de {formatar_moeda(total)}")
+                
+                # Linha superior com ícones
+                col_start, col_prog, col_end = st.columns([1, 10, 1])
+                
+                with col_start:
+                    st.markdown(f"<div style='text-align:center; font-size:24px;'>🏁</div>", unsafe_allow_html=True)
+                
+                with col_prog:
+                    # Barra de progresso
+                    progress_bar = st.progress(float(percentual) / 100)
+                    
+                    # Exibir ícone do status atual
+                    current_pos = max(min(float(percentual) / 100, 0.95), 0.05)  # Limitar entre 5% e 95%
+                    st.markdown(f"""
+                    <div style='
+                        position: relative;
+                        height: 20px;
+                        margin-top: -30px;
+                    '>
+                        <div style='
+                            position: absolute;
+                            left: {current_pos * 100}%;
+                            transform: translateX(-50%);
+                            font-size: 24px;
+                        '>{icone_status}</div>
                     </div>
-                    <div style="display: flex; align-items: center; position: relative; height: 36px;">
-                        <div style="
-                            position: absolute;
-                            left: 18px;
-                            top: 0;
-                            bottom: 0;
-                            right: 18px;
-                            background: #f0f0f0;
-                            border-radius: 4px;
-                            z-index: 1;
-                        "></div>
-                        <div style="
-                            position: absolute;
-                            left: 18px;
-                            top: 0;
-                            bottom: 0;
-                            width: calc({percentual}% * (100% - 36px) / 100);
-                            background: {cor_barra};
-                            border-radius: 4px 0 0 4px;
-                            z-index: 2;
-                            max-width: calc(100% - 36px);
-                        "></div>
-                        <div style="
-                            width: 36px;
-                            height: 36px;
-                            background: #f8f8f8;
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 18px;
-                            z-index: 3;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            border: 2px solid {cor_barra};
-                        ">🏁</div>
-                        <div style="
-                            position: absolute;
-                            right: 0;
-                            width: 36px;
-                            height: 36px;
-                            background: #f8f8f8;
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 18px;
-                            z-index: 3;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            border: 2px solid {cor_barra};
-                        ">{icone_conclusao}</div>
-                        <div style="
-                            position: absolute;
-                            left: 18px;
-                            width: calc({percentual}% * (100% - 36px) / 100);
-                            top: 0;
-                            bottom: 0;
-                            display: flex;
-                            align-items: center;
-                            justify-content: flex-end;
-                            z-index: 4;
-                        ">
-                            {f'''
-                            <div style="
-                                width: 28px;
-                                height: 28px;
-                                background: white;
-                                border-radius: 50%;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                font-size: 16px;
-                                margin-right: -14px;
-                                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                                border: 2px solid {cor_barra};
-                            ">{icone_status}</div>
-                            ''' if percentual > 0 else ''}
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #666;">
-                        <div>R$ 0</div>
-                        <div style="text-align: center;">{formatar_moeda(atual)} de {formatar_moeda(total)}</div>
-                        <div>{formatar_moeda(total)}</div>
-                    </div>
-                </div>
-                """
-            
-            # Exibir HTML de objetivos
-            st.markdown(f"""
-            <div style="max-height: 280px; overflow-y: auto;">
-                {objetivos_html}
-            </div>
-            """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+                
+                with col_end:
+                    st.markdown(f"<div style='text-align:center; font-size:24px;'>🏆</div>", unsafe_allow_html=True)
+                
+                # Mostrar valores
+                col_zero, col_current, col_total = st.columns([1, 10, 1])
+                with col_zero:
+                    st.markdown("<div style='text-align:left; font-size:10px;'>R$ 0</div>", unsafe_allow_html=True)
+                with col_current:
+                    st.markdown(f"<div style='text-align:center; font-size:12px;'>{formatar_moeda(atual)} de {formatar_moeda(total)}</div>", unsafe_allow_html=True)
+                with col_total:
+                    st.markdown(f"<div style='text-align:right; font-size:10px;'>{formatar_moeda(total)}</div>", unsafe_allow_html=True)
+                
+                st.markdown("---")
         else:
             st.info("Adicione objetivos para visualizar o progresso.")
         
