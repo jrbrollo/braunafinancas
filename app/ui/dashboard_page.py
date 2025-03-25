@@ -415,117 +415,141 @@ def render_dashboard_page():
         """, unsafe_allow_html=True)
         
         if objetivos:
-            # Preparar dados para o gráfico de barras de objetivos
+            # Preparar dados para o gráfico de objetivos
             nomes_obj = [o.get("nome", f"Objetivo {i+1}") for i, o in enumerate(objetivos)]
             valores_total = [float(o.get("valor_total", 0) or 0) for o in objetivos]
             valores_atual = [float(o.get("valor_atual", 0) or 0) for o in objetivos]
             
-            # Calcular percentuais para mostrar no hover
+            # Calcular percentuais para mostrar
             percentuais = [
-                round(atual / total * 100 if total > 0 else 0, 2)
+                round(atual / total * 100 if total > 0 else 0, 0)
                 for atual, total in zip(valores_atual, valores_total)
             ]
             
-            # Gráfico de barras para objetivos
-            df_obj = pd.DataFrame({
-                'Objetivo': nomes_obj,
-                'Atual': valores_atual,
-                'Total': valores_total,
-                'Percentual': percentuais
-            })
-            
-            # Ordenar por percentual de conclusão (do menor para o maior)
-            df_obj = df_obj.sort_values('Percentual')
-            
-            # Gráfico de barras para objetivos
-            fig = go.Figure()
-            
-            # Adicionar barra do valor total (fundo)
-            fig.add_trace(go.Bar(
-                x=df_obj['Total'],
-                y=df_obj['Objetivo'],
-                orientation='h',
-                marker=dict(
-                    color='rgba(0, 0, 0, 0.06)',
-                    pattern=dict(shape="-")
-                ),
-                hoverinfo='none',
-                showlegend=False
-            ))
-            
-            # Adicionar barra do valor atual (progresso)
-            fig.add_trace(go.Bar(
-                x=df_obj['Atual'],
-                y=df_obj['Objetivo'],
-                orientation='h',
-                marker=dict(
-                    color='#4DB6AC',
-                    line=dict(color='#00897B', width=1)
-                ),
-                name='Progresso',
-                hovertemplate='<b>%{y}</b><br>Progresso: %{x:,.2f} (%{text}%)<extra></extra>',
-                text=df_obj['Percentual'].apply(lambda x: f"{x:.1f}"),
-                textposition="inside",
-                insidetextanchor="middle",
-                textfont=dict(color="white", size=12, family="Arial, sans-serif")
-            ))
-            
-            # Adicionar rótulos de valor
-            for i, (obj, atual, total, pct) in enumerate(zip(df_obj['Objetivo'], df_obj['Atual'], df_obj['Total'], df_obj['Percentual'])):
-                if pct >= 20:  # Mostrar texto interno somente para barras maiores
-                    fig.add_annotation(
-                        x=atual/2,
-                        y=obj,
-                        text=f"{pct:.0f}%",
-                        showarrow=False,
-                        font=dict(color="white", size=11),
-                        xanchor="center"
-                    )
+            # Criar versão mais divertida com ícones
+            objetivos_html = ""
+            for i, (nome, atual, total, percentual) in enumerate(zip(nomes_obj, valores_atual, valores_total, percentuais)):
+                # Definir cores baseadas no progresso
+                cor_barra = "#1976D2"  # Azul padrão
+                if percentual >= 75:
+                    cor_barra = "#4CAF50"  # Verde para progresso alto
+                elif percentual >= 25:
+                    cor_barra = "#FFC107"  # Amarelo para progresso médio
+                else:
+                    cor_barra = "#F44336"  # Vermelho para progresso baixo
                 
-                # Mostrar valor total à direita
-                fig.add_annotation(
-                    x=total + (max(df_obj['Total']) * 0.03),
-                    y=obj,
-                    text=f"R$ {total:,.0f}",
-                    showarrow=False,
-                    font=dict(color="#777", size=10),
-                    xanchor="left"
-                )
+                # Definir ícone de conclusão baseado no progresso
+                icone_conclusao = "🏆"  # Troféu para todos
+                if percentual >= 100:
+                    icone_status = "✨"  # Estrela para objetivo concluído
+                elif percentual >= 75:
+                    icone_status = "🔥"  # Fogo para progresso alto
+                elif percentual >= 50:
+                    icone_status = "💪"  # Braço forte para progresso médio
+                elif percentual >= 25:
+                    icone_status = "🚶"  # Pessoa andando para progresso baixo
+                else:
+                    icone_status = "🏁"  # Bandeira de início para progresso muito baixo
+                
+                # HTML para o item de objetivo
+                objetivos_html += f"""
+                <div style="margin-bottom: 24px; position: relative;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <div style="font-weight: 600; font-size: 14px; color: #333;">{nome}</div>
+                        <div style="font-weight: 600; font-size: 14px; color: {cor_barra};">{percentual:.0f}%</div>
+                    </div>
+                    <div style="display: flex; align-items: center; position: relative; height: 36px;">
+                        <div style="
+                            position: absolute;
+                            left: 18px;
+                            top: 0;
+                            bottom: 0;
+                            right: 18px;
+                            background: #f0f0f0;
+                            border-radius: 4px;
+                            z-index: 1;
+                        "></div>
+                        <div style="
+                            position: absolute;
+                            left: 18px;
+                            top: 0;
+                            bottom: 0;
+                            width: calc({percentual}% * (100% - 36px) / 100);
+                            background: {cor_barra};
+                            border-radius: 4px 0 0 4px;
+                            z-index: 2;
+                            max-width: calc(100% - 36px);
+                        "></div>
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            background: #f8f8f8;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            z-index: 3;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            border: 2px solid {cor_barra};
+                        ">🏁</div>
+                        <div style="
+                            position: absolute;
+                            right: 0;
+                            width: 36px;
+                            height: 36px;
+                            background: #f8f8f8;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            z-index: 3;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            border: 2px solid {cor_barra};
+                        ">{icone_conclusao}</div>
+                        <div style="
+                            position: absolute;
+                            left: 18px;
+                            width: calc({percentual}% * (100% - 36px) / 100);
+                            top: 0;
+                            bottom: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: flex-end;
+                            z-index: 4;
+                        ">
+                            {f'''
+                            <div style="
+                                width: 28px;
+                                height: 28px;
+                                background: white;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 16px;
+                                margin-right: -14px;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                                border: 2px solid {cor_barra};
+                            ">{icone_status}</div>
+                            ''' if percentual > 0 else ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #666;">
+                        <div>R$ 0</div>
+                        <div style="text-align: center;">{formatar_moeda(atual)} de {formatar_moeda(total)}</div>
+                        <div>{formatar_moeda(total)}</div>
+                    </div>
+                </div>
+                """
             
-            # Atualizar layout do gráfico
-            fig.update_layout(
-                barmode='overlay',
-                xaxis=dict(
-                    title='Valor (R$)',
-                    showgrid=True,
-                    gridcolor='rgba(0,0,0,0.05)',
-                    zeroline=False,
-                    showticklabels=False
-                ),
-                yaxis=dict(
-                    title='',
-                    autorange="reversed",
-                    tickfont=dict(size=11, family="Arial, sans-serif")
-                ),
-                height=280,
-                margin=dict(t=0, b=0, l=0, r=10),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial, sans-serif"
-                ),
-                template="plotly_white"
-            )
-            
-            # Configurações adicionais para garantir a aparência correta
-            config = {
-                'displayModeBar': False,
-                'responsive': True
-            }
-            
-            st.plotly_chart(fig, use_container_width=True, config=config)
+            # Exibir HTML de objetivos
+            st.markdown(f"""
+            <div style="max-height: 280px; overflow-y: auto;">
+                {objetivos_html}
+            </div>
+            """, unsafe_allow_html=True)
         else:
             st.info("Adicione objetivos para visualizar o progresso.")
         
