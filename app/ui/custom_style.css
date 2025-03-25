@@ -733,4 +733,33 @@ h3.card-title {
   min-height: 36px !important;
   padding-top: 2px !important;
   padding-bottom: 2px !important;
+}
+
+/* Botões da barra lateral mais compactos */
+[data-testid="stSidebar"] [data-testid="baseButton-secondary"],
+[data-testid="stSidebar"] [data-testid="baseButton-primary"] {
+  margin-bottom: 0 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  min-height: 32px !important;
+  height: auto !important;
+}
+
+/* Container de botões mais compacto */
+[data-testid="stSidebar"] .row-widget.stButton {
+  margin-bottom: 1px !important;
+  padding: 0 !important;
+}
+
+/* Ajuste geral para elementos do sidebar */
+[data-testid="stSidebar"] [data-testid="element-container"] {
+  margin-bottom: 1px !important;
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Reduzir altura dos botões */
+[data-testid="stSidebar"] button[kind="secondary"],
+[data-testid="stSidebar"] button[kind="primary"] {
+  line-height: 1 !important;
 } 
