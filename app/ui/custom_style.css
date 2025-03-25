@@ -2,15 +2,15 @@
 
 /* Variáveis de Cor */
 :root {
-  --primary: #4CAF50;
-  --primary-light: #81C784;
-  --primary-dark: #388E3C;
+  --primary: #2A5CAA;
+  --primary-light: #4A7BC2;
+  --primary-dark: #1A4A98;
   --secondary: #F5F5F5;
   --text-dark: #333333;
   --text-light: #FFFFFF;
   --positive: #4CAF50;
-  --negative: #F44336;
-  --warning: #FFC107;
+  --negative: #EF5350;
+  --warning: #FFD700;
   --border-light: #E0E0E0;
   --shadow: 0 4px 12px rgba(0,0,0,0.15);
   --card-radius: 8px;
@@ -46,10 +46,11 @@ body, .main, div.stApp, [data-testid="stAppViewContainer"], [data-testid="stAppV
 
 /* Estilo para o logotipo */
 div [data-testid="stSidebarUserContent"] > div:first-child {
-  background-color: white !important;
+  background-color: var(--primary) !important;
   padding: 20px !important;
   margin-bottom: 20px !important;
   border-bottom: 1px solid var(--border-light) !important;
+  color: var(--text-light) !important;
 }
 
 /* Botões da Sidebar */
@@ -70,7 +71,7 @@ div.stButton button {
 }
 
 div.stButton button:hover {
-  background: rgba(76, 175, 80, 0.1) !important;
+  background: rgba(42, 92, 170, 0.1) !important;
   color: var(--primary-dark) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
@@ -109,6 +110,14 @@ h2 {
   margin-top: 16px !important;
   margin-bottom: 12px !important;
   color: var(--primary-dark) !important;
+}
+
+h3.card-title {
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
 }
 
 /* Cards */
@@ -159,13 +168,73 @@ h2 {
   padding: 8px 16px !important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
-  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 2px 5px rgba(42, 92, 170, 0.3) !important;
 }
 
 [data-testid="baseButton-primary"]:hover {
   background: var(--primary-dark) !important;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4) !important;
+  box-shadow: 0 4px 8px rgba(42, 92, 170, 0.4) !important;
   transform: translateY(-2px) !important;
+}
+
+/* Botões de ação rápida no dashboard */
+div.stButton button[key*="btn_"] {
+  background: var(--primary) !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 15px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin-bottom: 5px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+}
+
+div.stButton button[key*="btn_"]:hover {
+  background: var(--primary-dark) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+div.stButton button[key="btn_gasto"] {
+  background: var(--primary) !important;
+}
+
+div.stButton button[key="btn_investimento"] {
+  background: var(--positive) !important;
+}
+
+div.stButton button[key="btn_investimento"]:hover {
+  background: #388E3C !important;
+}
+
+div.stButton button[key="btn_objetivo"] {
+  background: var(--warning) !important;
+  color: #333 !important;
+}
+
+div.stButton button[key="btn_objetivo"]:hover {
+  background: #DAB900 !important;
+}
+
+div.stButton button[key="btn_divida"] {
+  background: var(--negative) !important;
+}
+
+div.stButton button[key="btn_divida"]:hover {
+  background: #D32F2F !important;
+}
+
+div.stButton button[key="btn_seguro"] {
+  background: #FF9800 !important;
+}
+
+div.stButton button[key="btn_seguro"]:hover {
+  background: #F57C00 !important;
 }
 
 /* Tabelas */
@@ -209,7 +278,7 @@ table tr:hover {
 
 [data-baseweb="input"]:focus-within, [data-baseweb="select"]:focus-within, [data-baseweb="textarea"]:focus-within {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(42, 92, 170, 0.2) !important;
 }
 
 /* Cores para elementos específicos */
@@ -240,6 +309,48 @@ table tr:hover {
 
 .objetivo-card {
   border-left: 4px solid var(--warning) !important;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+}
+
+.badge-success {
+  background-color: var(--positive) !important;
+  color: white !important;
+}
+
+.badge-warning {
+  background-color: var(--warning) !important;
+  color: #333 !important;
+}
+
+.badge-danger {
+  background-color: var(--negative) !important;
+  color: white !important;
+}
+
+/* Containers de gráficos */
+.chart-container {
+  background-color: white !important;
+  border-radius: var(--card-radius) !important;
+  padding: 15px !important;
+  margin-bottom: 16px !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.chart-container .card-title {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 5px !important;
+  border-bottom: 1px solid #eee !important;
 }
 
 /* Correções para layout específico */
