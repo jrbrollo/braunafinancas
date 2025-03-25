@@ -747,13 +747,13 @@ h3.card-title {
 
 /* Container de botões mais compacto */
 [data-testid="stSidebar"] .row-widget.stButton {
-  margin-bottom: 1px !important;
+  margin-bottom: 4px !important;
   padding: 0 !important;
 }
 
 /* Ajuste geral para elementos do sidebar */
 [data-testid="stSidebar"] [data-testid="element-container"] {
-  margin-bottom: 1px !important;
+  margin-bottom: 4px !important;
   padding-bottom: 0 !important;
   padding-top: 0 !important;
 }
