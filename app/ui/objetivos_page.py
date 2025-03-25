@@ -383,11 +383,13 @@ def render_objetivos_page():
                         if st.button("💰 Atualizar valor", key=f"update_{obj.get('id')}"):
                             st.session_state.objetivo_para_atualizar = obj.get("id")
                             st.session_state.mostrar_form_atualizacao = True
+                            st.rerun()
                     
                     with col_acoes3:
                         if st.button("🗑️ Excluir", key=f"delete_{obj.get('id')}"):
                             st.session_state.objetivo_para_excluir = obj.get("id")
                             st.session_state.confirmar_exclusao = True
+                            st.rerun()
             
             # Formulário para edição de objetivo
             if "mostrar_form_edicao" in st.session_state and st.session_state.mostrar_form_edicao:
