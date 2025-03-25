@@ -58,15 +58,31 @@ div [data-testid="stSidebarUserContent"] > div:first-child {
   color: var(--text-dark) !important;
 }
 
-/* Botões da Sidebar - seletor mais específico */
-[data-testid="stSidebar"] div.stButton > button {
+/* Regras específicas para elementos da barra lateral */
+.st-emotion-cache-z5fcl4 {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Botões da Sidebar - seletor direto */
+.st-emotion-cache-ocqkz7 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Ajuste específico para botões da barra lateral */
+[data-testid="stSidebar"] .stButton > button {
   background: var(--secondary) !important;
   color: var(--text-dark) !important;
   border: 1px solid var(--border-light) !important;
-  border-radius: 6px !important;
-  padding: 2px 12px !important;
+  border-radius: 8px !important;
+  padding: 2px 16px !important;
   margin-top: 0 !important;
-  margin-bottom: 1px !important;
+  margin-bottom: 0 !important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
   text-align: left !important;
@@ -74,35 +90,39 @@ div [data-testid="stSidebarUserContent"] > div:first-child {
   display: flex !important;
   align-items: center !important;
   box-shadow: none !important;
-  font-size: 0.9rem !important;
-  min-height: 30px !important;
-  height: auto !important;
-  line-height: 1.2 !important;
 }
 
-/* Ocultar elementos desnecessários no botão para economizar espaço */
-[data-testid="stSidebar"] div.stButton > button > div {
+/* Estilos para elementos dentro dos botões */
+[data-testid="stSidebar"] .stButton > button > div {
   padding: 0 !important;
   margin: 0 !important;
 }
 
+/* Container de botões na barra lateral */
+[data-testid="stSidebar"] .stButton {
+  margin-top: 0 !important;
+  margin-bottom: 1px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* Ajustar comportamento de hover */
-[data-testid="stSidebar"] div.stButton button:hover {
+[data-testid="stSidebar"] .stButton button:hover {
   background: rgba(42, 92, 170, 0.05) !important;
   color: var(--primary) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
   border-color: var(--primary-light) !important;
 }
 
 /* Ajustar seletores para botões ativos/secundários */
-[data-testid="stSidebar"] div.stButton button[data-testid*="baseButton-secondary"] {
+[data-testid="stSidebar"] .stButton button[data-testid*="baseButton-secondary"] {
   background: var(--secondary) !important;
   color: var(--primary) !important;
   border: 1px solid var(--primary-light) !important;
 }
 
-[data-testid="stSidebar"] div.stButton button[data-testid*="baseButton-primary"] {
+[data-testid="stSidebar"] .stButton button[data-testid*="baseButton-primary"] {
   background: var(--primary) !important;
   color: white !important;
   border: none !important;
@@ -512,6 +532,7 @@ table tr:hover {
   background-color: white !important;
   border-right: 1px solid var(--border-light) !important;
   box-shadow: 2px 0 5px rgba(0,0,0,0.05) !important;
+  padding-top: 0 !important;
 }
 
 /* Estilização adicional para elementos do Streamlit */
@@ -669,4 +690,47 @@ h3.card-title {
   color: var(--primary) !important;
   margin-top: 1.25rem !important;
   margin-bottom: 0.75rem !important;
+}
+
+/* Reduzir espaçamento vertical no menu lateral */
+[data-testid="stSidebar"] .element-container {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Estilos para compactar menu lateral - seletores mais específicos */
+[data-testid="stSidebar"] {
+  padding-top: 0 !important;
+}
+
+/* Atacar diretamente os wrappers do Streamlit */
+[data-testid="stSidebar"] div:has(> .stButton) {
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Elementos com classes geradas pelo Streamlit */
+.st-emotion-cache-16txtl3, 
+.st-emotion-cache-1inwz65, 
+.st-emotion-cache-1wmy9hl,
+.st-emotion-cache-16idsys {
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Atacar os blocos verticais dentro da barra lateral */
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+  gap: 0 !important;
+}
+
+/* Altura reduzida dos botões */
+[data-testid="stSidebar"] .stButton > button {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 } 

@@ -591,7 +591,7 @@ def render_sidebar():
         # Informações do usuário
         if user:
             st.markdown(f"""
-            <div style="display: flex; align-items: center; padding: 0.5rem 1rem; margin-bottom: 1rem; background-color: var(--card-background); border-radius: 0.5rem; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; padding: 0.5rem 1rem; margin-bottom: 0.5rem; background-color: var(--card-background); border-radius: 0.5rem; box-shadow: var(--shadow-sm);">
                 <div style="margin-right: 0.5rem;">
                     <span style="font-size: 1.5rem;">👤</span>
                 </div>
@@ -601,12 +601,6 @@ def render_sidebar():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-        
-        # Separador
-        st.markdown('<div style="height: 1px; background: var(--border-color); margin: 0.5rem 0 1.5rem 0;"></div>', unsafe_allow_html=True)
-        
-        # Botões de navegação simplificados
-        pagina_atual = st.session_state.pagina_atual
         
         # Definição de botões de navegação
         nav_items = [
@@ -619,36 +613,65 @@ def render_sidebar():
             {"icon": "⚙️", "label": "Configurações", "id": "settings"}
         ]
         
-        # Renderizar botões
+        # Usar HTML personalizado para renderizar o menu
+        pagina_atual = st.session_state.pagina_atual
+        menu_html = ""
+        
+        # Criar botões personalizados direto com HTML
         for item in nav_items:
             is_active = pagina_atual == item["id"]
-            button_style = "primary" if is_active else "secondary"
+            bg_color = "var(--primary)" if is_active else "var(--secondary)"
+            text_color = "white" if is_active else "var(--text-dark)"
+            border = "none" if is_active else "1px solid var(--border-light)"
             
-            if st.button(
-                f"{item['icon']} {item['label']}", 
-                key=f"nav_{item['id']}",
-                type=button_style,
-                use_container_width=True
-            ):
-                set_pagina(item["id"])
-        
-        # Separador antes das configurações
-        st.markdown('<div style="height: 1px; background: var(--border-color); margin: 1.5rem 0;"></div>', unsafe_allow_html=True)
-        
-        # Botão de logout
-        if st.button("🚪 Sair", use_container_width=True, type="secondary"):
-            logout()
-            st.rerun()
+            menu_html += f"""
+            <div style="margin: 2px 0;">
+                <button 
+                    onclick="parent.window.location.href='{item['id']}'" 
+                    style="
+                        width: 100%; 
+                        background-color: {bg_color}; 
+                        color: {text_color}; 
+                        border: {border}; 
+                        border-radius: 8px; 
+                        padding: 6px 12px; 
+                        text-align: left; 
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s;
+                        display: flex;
+                        align-items: center;
+                    "
+                >
+                    <span style="margin-right: 8px;">{item['icon']}</span> {item['label']}
+                </button>
+            </div>
+            """
             
-        # Toggle para tema claro/escuro
-        tema_label = "🌙 Tema Escuro" if st.session_state.tema == "claro" else "☀️ Tema Claro"
-        if st.button(tema_label, use_container_width=True, type="secondary"):
-            toggle_tema()
-            st.rerun()
+        # Adicionar o HTML completo dos botões
+        st.markdown(f"""
+        <div style="margin-top: 8px; margin-bottom: 16px;">
+            {menu_html}
+        </div>
+        <div style="height: 1px; background: var(--border-color); margin: 8px 0;"></div>
+        """, unsafe_allow_html=True)
+        
+        # Botões nativos para operações especiais
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚪 Sair", use_container_width=True, type="secondary"):
+                logout()
+                st.rerun()
+        
+        with col2:
+            tema_label = "🌙 Escuro" if st.session_state.tema == "claro" else "☀️ Claro"
+            if st.button(tema_label, use_container_width=True, type="secondary"):
+                toggle_tema()
+                st.rerun()
         
         # Rodapé
         st.markdown("""
-        <div style="position: relative; bottom: 1rem; left: 0; right: 0; text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--text-color-secondary);">
+        <div style="position: relative; bottom: 1rem; left: 0; right: 0; text-align: center; padding: 0.5rem; font-size: 0.75rem; color: var(--text-color-secondary);">
             <p style="margin: 0;">Brauna Finanças v1.0.0</p>
             <p style="margin: 0;">© 2025 Brauna Finanças</p>
         </div>
