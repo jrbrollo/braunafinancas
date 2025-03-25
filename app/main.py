@@ -613,50 +613,26 @@ def render_sidebar():
             {"icon": "⚙️", "label": "Configurações", "id": "settings"}
         ]
         
-        # Usar HTML personalizado para renderizar o menu
+        # Renderizar botões usando o Streamlit nativo
         pagina_atual = st.session_state.pagina_atual
-        menu_html = ""
         
-        # Criar botões personalizados direto com HTML
+        # Container para botões com espaçamento mínimo
         for item in nav_items:
             is_active = pagina_atual == item["id"]
-            bg_color = "var(--primary)" if is_active else "var(--secondary)"
-            text_color = "white" if is_active else "var(--text-dark)"
-            border = "none" if is_active else "1px solid var(--border-light)"
+            button_style = "primary" if is_active else "secondary"
             
-            menu_html += f"""
-            <div style="margin: 2px 0;">
-                <button 
-                    onclick="parent.window.location.href='{item['id']}'" 
-                    style="
-                        width: 100%; 
-                        background-color: {bg_color}; 
-                        color: {text_color}; 
-                        border: {border}; 
-                        border-radius: 8px; 
-                        padding: 6px 12px; 
-                        text-align: left; 
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.3s;
-                        display: flex;
-                        align-items: center;
-                    "
-                >
-                    <span style="margin-right: 8px;">{item['icon']}</span> {item['label']}
-                </button>
-            </div>
-            """
-            
-        # Adicionar o HTML completo dos botões
-        st.markdown(f"""
-        <div style="margin-top: 8px; margin-bottom: 16px;">
-            {menu_html}
-        </div>
-        <div style="height: 1px; background: var(--border-color); margin: 8px 0;"></div>
-        """, unsafe_allow_html=True)
+            if st.button(
+                f"{item['icon']} {item['label']}", 
+                key=f"nav_{item['id']}",
+                type=button_style,
+                use_container_width=True
+            ):
+                set_pagina(item["id"])
         
-        # Botões nativos para operações especiais
+        # Separador antes das configurações
+        st.markdown('<div style="height: 1px; background: var(--border-color); margin: 8px 0;"></div>', unsafe_allow_html=True)
+        
+        # Botões para operações especiais
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🚪 Sair", use_container_width=True, type="secondary"):
