@@ -101,7 +101,7 @@ div [data-testid="stSidebarUserContent"] > div:first-child {
 /* Container de botões na barra lateral */
 [data-testid="stSidebar"] .stButton {
   margin-top: 0 !important;
-  margin-bottom: 1px !important;
+  margin-bottom: 12px !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
