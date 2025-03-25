@@ -39,6 +39,16 @@ def load_custom_styles():
             """, unsafe_allow_html=True)
     else:
         st.error(f"Arquivo CSS não encontrado: {css_file}")
+    
+    # Garantir que os elementos padrão do Streamlit estejam ocultos
+    st.markdown("""
+        <style>
+        #MainMenu {visibility: hidden !important; display: none !important;}
+        footer {visibility: hidden !important; display: none !important;}
+        header {visibility: hidden !important; display: none !important;}
+        div[data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
+        </style>
+    """, unsafe_allow_html=True)
 
 # Carregar as fontes do Google
 def load_google_fonts():
@@ -562,7 +572,6 @@ def main():
     # Carregar estilos e fontes primeiro, antes de qualquer outro elemento da UI
     load_google_fonts()
     load_custom_styles()
-    hide_streamlit_elements()
     
     # Garantir que diretórios de dados existam
     ensure_data_dirs()
@@ -573,259 +582,6 @@ def main():
     # Configurar tema
     if "tema" not in st.session_state:
         st.session_state.tema = config.get("tema", "claro")
-    
-    # Aplicar tema
-    tema_atual = st.session_state.tema
-    if tema_atual == "escuro":
-        # Tema escuro
-        st.markdown("""
-        <style>
-        :root {
-            --primary: #4CAF50;
-            --secondary: #2196F3;
-            --accent: #FF9800;
-            --background: #121212;
-            --second-background: #1E1E1E;
-            --text-color: #E0E0E0;
-            --text-color-secondary: #9E9E9E;
-            --card-background: #1E1E1E;
-            --card-border: #333333;
-            --success: #4CAF50;
-            --warning: #FFC107;
-            --error: #F44336;
-            --gray-dark: #424242;
-            --gray: #757575;
-            --gray-light: #9E9E9E;
-            --gray-lighter: #424242;
-            --red: #F44336;
-            --red-light: #331111;
-            --green: #4CAF50;
-            --green-light: #113311;
-            --blue: #2196F3;
-            --blue-light: #111133;
-            --yellow: #FFC107;
-            --yellow-light: #333311;
-            --yellow-dark: #FF9800;
-        }
-        
-        /* Aplicar tema escuro */
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-        }
-        
-        .stApp {
-            background-color: var(--background);
-        }
-        
-        .stTabs [data-baseweb="tab-list"] {
-            background-color: var(--second-background);
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            color: var(--text-color);
-        }
-        
-        .stTabs [aria-selected="true"] {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        /* Estilos para cards */
-        .card {
-            background-color: var(--card-background);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: box-shadow 0.3s;
-        }
-        
-        .card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-        }
-        
-        /* Estilos para badges */
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            text-align: center;
-        }
-        
-        .badge.success {
-            background-color: var(--green-light);
-            color: var(--green);
-        }
-        
-        .badge.warning {
-            background-color: var(--yellow-light);
-            color: var(--yellow);
-        }
-        
-        .badge.danger {
-            background-color: var(--red-light);
-            color: var(--red);
-        }
-        
-        /* Estilos para métricas */
-        .metric-label {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        /* Cores para cartões específicos */
-        .card.danger .metric-value {
-            color: var(--red);
-        }
-        
-        .card.success .metric-value {
-            color: var(--green);
-        }
-        
-        /* Estilos para input fields escuros */
-        .stTextInput>div>div>input, .stNumberInput>div>div>input, .stDateInput>div>div>input {
-            background-color: var(--second-background) !important;
-            color: var(--text-color) !important;
-            border-color: var(--gray-dark) !important;
-        }
-        
-        .stTextInput>div>div>input:focus, .stNumberInput>div>div>input:focus, .stDateInput>div>div>input:focus {
-            border-color: var(--primary) !important;
-        }
-        
-        .stSelectbox>div>div>div, .stMultiselect>div>div>div {
-            background-color: var(--second-background) !important;
-            color: var(--text-color) !important;
-            border-color: var(--gray-dark) !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-    else:
-        # Tema claro (padrão)
-        st.markdown("""
-        <style>
-        :root {
-            --primary: #4CAF50;
-            --secondary: #2196F3;
-            --accent: #FF9800;
-            --background: #FFFFFF;
-            --second-background: #F5F5F5;
-            --text-color: #212121;
-            --text-color-secondary: #757575;
-            --card-background: #FFFFFF;
-            --card-border: #E0E0E0;
-            --success: #4CAF50;
-            --warning: #FFC107;
-            --error: #F44336;
-            --gray-dark: #424242;
-            --gray: #757575;
-            --gray-light: #9E9E9E;
-            --gray-lighter: #E0E0E0;
-            --red: #F44336;
-            --red-light: #FFEBEE;
-            --green: #4CAF50;
-            --green-light: #E8F5E9;
-            --blue: #2196F3;
-            --blue-light: #E3F2FD;
-            --yellow: #FFC107;
-            --yellow-light: #FFF8E1;
-            --yellow-dark: #FF9800;
-        }
-        
-        /* Aplicar tema claro */
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-        }
-        
-        .stApp {
-            background-color: var(--background);
-        }
-        
-        /* Estilos para cards */
-        .card {
-            background-color: var(--card-background);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: box-shadow 0.3s;
-        }
-        
-        .card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Estilos para badges */
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            text-align: center;
-        }
-        
-        .badge.success {
-            background-color: var(--green-light);
-            color: var(--green);
-        }
-        
-        .badge.warning {
-            background-color: var(--yellow-light);
-            color: var(--yellow-dark);
-        }
-        
-        .badge.danger {
-            background-color: var(--red-light);
-            color: var(--red);
-        }
-        
-        /* Estilos para métricas */
-        .metric-label {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        /* Cores para cartões específicos */
-        .card.danger .metric-value {
-            color: var(--red);
-        }
-        
-        .card.success .metric-value {
-            color: var(--green);
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # Aplicar tema ao body
-    if tema_atual == "escuro":
-        st.markdown("""
-        <script>
-        document.body.setAttribute('data-theme', 'dark');
-        </script>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <script>
-        document.body.removeAttribute('data-theme');
-        </script>
-        """, unsafe_allow_html=True)
     
     # Inicializar session state para controle de navegação se não existir
     if "pagina_atual" not in st.session_state:
@@ -936,11 +692,14 @@ def main():
         
         # Rodapé
         st.markdown("""
-        <div style="position: absolute; bottom: 1rem; left: 0; right: 0; text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--text-color-secondary);">
+        <div style="position: relative; bottom: 1rem; left: 0; right: 0; text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--text-color-secondary);">
             <p style="margin: 0;">Brauna Finanças v1.0.0</p>
             <p style="margin: 0;">© 2025 Brauna Finanças</p>
         </div>
         """, unsafe_allow_html=True)
+    
+    # Renderizar cabeçalho
+    render_header()
     
     # Renderizar a página selecionada com transição suave
     pagina_atual = st.session_state.pagina_atual
