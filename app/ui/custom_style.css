@@ -28,9 +28,9 @@ body, .main, div.stApp, [data-testid="stAppViewContainer"], [data-testid="stAppV
 }
 
 [data-testid="stSidebarContent"] {
-  background-color: white !important;
-  border-right: 1px solid var(--border-light) !important;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.05) !important;
+  background-color: var(--primary) !important;
+  border-right: 1px solid var(--primary-dark) !important;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1) !important;
 }
 
 /* Esconder elementos do Streamlit */
@@ -41,23 +41,23 @@ body, .main, div.stApp, [data-testid="stAppViewContainer"], [data-testid="stAppV
 
 /* Estilo do Sidebar */
 .css-1cypcdb, .css-1adrfps {
-  background-color: white !important;
+  background-color: var(--primary) !important;
 }
 
 /* Estilo para o logotipo */
 div [data-testid="stSidebarUserContent"] > div:first-child {
-  background-color: var(--primary) !important;
+  background-color: var(--primary-dark) !important;
   padding: 20px !important;
   margin-bottom: 20px !important;
-  border-bottom: 1px solid var(--border-light) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.2) !important;
   color: var(--text-light) !important;
 }
 
 /* Botões da Sidebar */
 div.stButton button {
-  background: white !important;
-  color: var(--primary) !important;
-  border: 1px solid var(--primary) !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
   border-radius: 8px !important;
   padding: 10px 18px !important;
   font-weight: 600 !important;
@@ -71,14 +71,14 @@ div.stButton button {
 }
 
 div.stButton button:hover {
-  background: rgba(42, 92, 170, 0.1) !important;
-  color: var(--primary-dark) !important;
+  background: rgba(255,255,255,0.2) !important;
+  color: var(--text-light) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
 }
 
 [data-testid="stSidebar"] div.stButton button[data-testid*="baseButton-secondary"] {
-  background: var(--primary) !important;
+  background: var(--primary-light) !important;
   color: white !important;
   border: none !important;
 }
@@ -182,26 +182,29 @@ div.stButton button[key*="btn_"] {
   background: var(--primary) !important;
   color: white !important;
   border: none !important;
-  padding: 10px 15px !important;
-  font-weight: 500 !important;
-  border-radius: 6px !important;
+  padding: 12px 15px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
   transition: all 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
   margin-bottom: 5px !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
 }
 
 div.stButton button[key*="btn_"]:hover {
-  background: var(--primary-dark) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
 }
 
 div.stButton button[key="btn_gasto"] {
   background: var(--primary) !important;
+}
+
+div.stButton button[key="btn_gasto"]:hover {
+  background: var(--primary-dark) !important;
 }
 
 div.stButton button[key="btn_investimento"] {
@@ -297,18 +300,28 @@ table tr:hover {
 /* Cards específicos para cada seção */
 .dashboard-card {
   border-top: 4px solid var(--primary) !important;
+  background: linear-gradient(to bottom, #ffffff, #f9fafc) !important;
+  transition: all 0.3s ease !important;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(42, 92, 170, 0.15) !important;
 }
 
 .investimento-card {
   border-left: 4px solid var(--positive) !important;
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.05), transparent 20%) !important;
 }
 
 .divida-card {
   border-left: 4px solid var(--negative) !important;
+  background: linear-gradient(to right, rgba(239, 83, 80, 0.05), transparent 20%) !important;
 }
 
 .objetivo-card {
   border-left: 4px solid var(--warning) !important;
+  background: linear-gradient(to right, rgba(255, 215, 0, 0.05), transparent 20%) !important;
 }
 
 /* Badges */
@@ -339,18 +352,20 @@ table tr:hover {
 .chart-container {
   background-color: white !important;
   border-radius: var(--card-radius) !important;
-  padding: 15px !important;
+  padding: 20px !important;
   margin-bottom: 16px !important;
   box-shadow: var(--shadow) !important;
+  border-top: 4px solid var(--primary) !important;
+  background: linear-gradient(to bottom, #ffffff, #f9fafc) !important;
 }
 
 .chart-container .card-title {
   font-size: 1.1rem !important;
   font-weight: 600 !important;
   color: var(--primary) !important;
-  margin-bottom: 10px !important;
-  padding-bottom: 5px !important;
-  border-bottom: 1px solid #eee !important;
+  margin-bottom: 15px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
 }
 
 /* Correções para layout específico */
@@ -385,15 +400,15 @@ table tr:hover {
 }
 
 .badge-warning {
-  background-color: rgba(255, 193, 7, 0.15) !important;
-  color: #FF9800 !important;
-  border: 1px solid rgba(255, 193, 7, 0.3) !important;
+  background-color: rgba(255, 215, 0, 0.15) !important;
+  color: #D4AF00 !important;
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
 }
 
 .badge-danger {
-  background-color: rgba(244, 67, 54, 0.15) !important;
+  background-color: rgba(239, 83, 80, 0.15) !important;
   color: var(--negative) !important;
-  border: 1px solid rgba(244, 67, 54, 0.3) !important;
+  border: 1px solid rgba(239, 83, 80, 0.3) !important;
 }
 
 /* Correções para streamlit */
@@ -408,7 +423,6 @@ table tr:hover {
   padding: 15px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
-  border-left: 5px solid var(--primary);
 }
 
 /* Estilo para seções específicas */
@@ -470,8 +484,8 @@ table tr:hover {
 
 /* Estilizar o sidebar */
 [data-testid="stSidebar"] {
-  background-color: #f8f9fa !important;
-  border-right: 1px solid #e9ecef !important;
+  background-color: var(--primary) !important;
+  border-right: 1px solid var(--primary-dark) !important;
   box-shadow: 2px 0 5px rgba(0,0,0,0.05) !important;
 }
 
@@ -499,7 +513,7 @@ div.stButton > button:first-child {
 
 /* Ajustes para gráficos mais compactos */
 [data-testid="stHorizontalBlock"] {
-  gap: 8px !important;
+  gap: 10px !important;
 }
 
 /* Reduz espaço vertical entre blocos */
@@ -623,93 +637,11 @@ div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
   font-size: 9px !important;
 }
 
-/* Sobrescrever estilos de botão para ações rápidas */
-.acao-rapida-container button {
-  background-color: white !important;
-  color: var(--primary) !important;
-  border: none !important;
-  padding: 0 !important;
-  width: 60px !important;
-  height: 60px !important;
-  min-width: unset !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-}
-
-.acao-rapida-container button:hover {
-  background-color: white !important;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2) !important;
-  transform: translateY(-3px) !important;
-}
-
-.icon-btn {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.icon-emoji {
-  font-size: 20px !important;
-  margin-bottom: 4px !important;
-}
-
-.icon-text {
-  font-size: 9px !important;
-  text-align: center !important;
-  max-width: 100% !important;
-  line-height: 1 !important;
-}
-
-/* Ações rápidas compactas */
-.acoes-rapidas-compact {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-  background-color: white;
-  padding: 16px;
-  border-radius: var(--card-radius);
-  box-shadow: var(--shadow);
-}
-
 /* Título de seção mais compacto */
 h3.card-title {
   font-size: 1.2rem !important;
   font-weight: 600 !important;
-  color: var(--primary-dark) !important;
+  color: var(--primary) !important;
   margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
-}
-
-/* Estilo para os botões das ações rápidas */
-.acoes-rapidas-compact button {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: white !important;
-  color: var(--primary) !important;
-  border: 1px solid rgba(76, 175, 80, 0.3) !important;
-  border-radius: 6px !important;
-  padding: 6px 12px !important;
-  font-size: 0.9rem !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
-  height: auto !important;
-  min-height: 36px !important;
-  width: 100% !important;
-  margin: 0 !important;
-}
-
-.acoes-rapidas-compact button:hover {
-  background-color: rgba(76, 175, 80, 0.1) !important;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2) !important;
-  transform: translateY(-2px) !important;
-}
-
-/* Ajuste para o layout das colunas de botões */
-[data-testid="stHorizontalBlock"] > [data-testid="column"] {
-  padding: 0 5px !important;
 } 
