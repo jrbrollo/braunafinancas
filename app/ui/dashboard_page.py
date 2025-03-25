@@ -460,11 +460,7 @@ def render_dashboard_page():
                 orientation='h',
                 marker=dict(
                     color='#4DB6AC',
-                    line=dict(color='#00897B', width=1),
-                    gradient=dict(
-                        type="horizontal",
-                        color="#80CBC4"
-                    )
+                    line=dict(color='#00897B', width=1)
                 ),
                 name='Progresso',
                 hovertemplate='<b>%{y}</b><br>Progresso: %{x:,.2f} (%{text}%)<extra></extra>',
