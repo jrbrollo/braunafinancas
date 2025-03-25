@@ -80,6 +80,10 @@ def render_investimentos_page():
                     data_inicio = st.date_input("Data do investimento", value=datetime.now())
                 
                 with col4:
+                    data_vencimento = st.date_input("Data de vencimento (opcional)", value=None)
+                
+                col5, col6 = st.columns(2)
+                with col5:
                     rentabilidade_anual = st.number_input(
                         "Rentabilidade anual (%)", 
                         min_value=0.0, 
@@ -119,13 +123,14 @@ def render_investimentos_page():
                         }
                         
                         # Adicionar data de vencimento se fornecida
-                        if data_vencimento:
+                        if data_vencimento is not None:
                             novo_investimento["data_vencimento"] = data_vencimento.strftime("%Y-%m-%d")
                         
                         # Tentar salvar o investimento
                         if add_investimento(novo_investimento):
                             st.success("✅ Investimento adicionado com sucesso!")
                             # Limpar o formulário
+                            st.session_state.mostrar_form_investimento = False
                             st.experimental_rerun()
                         else:
                             st.error("❌ Erro ao adicionar investimento. Por favor, verifique os dados e tente novamente.")
