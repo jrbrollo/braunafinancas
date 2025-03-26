@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objects as go
-from app.data.data_handler import load_data, save_data
+from app.data.data_handler import load_data, save_data, load_user_data
 from app.ui.custom_style import load_custom_styles
 
 def render_planejamento_page():
@@ -11,18 +11,18 @@ def render_planejamento_page():
     """
     st.title("📊 Meu Planejamento")
     
-    # Carregar dados e converter para DataFrame
-    renda = pd.DataFrame(load_data("renda"))
+    # Carregar dados
+    dados_usuario = load_user_data()
     gastos = pd.DataFrame(load_data("gastos"))
     planejamento = pd.DataFrame(load_data("planejamento"))
     
     # Se não houver renda cadastrada, mostrar mensagem
-    if renda.empty:
+    if not dados_usuario or "renda_mensal" not in dados_usuario:
         st.warning("⚠️ Para criar seu planejamento, primeiro cadastre sua renda mensal na página de configurações.")
         return
     
     # Obter renda mensal
-    renda_mensal = renda['valor'].sum()
+    renda_mensal = dados_usuario["renda_mensal"]
     
     # Criar duas colunas
     col1, col2 = st.columns([2, 1])
