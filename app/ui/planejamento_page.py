@@ -159,7 +159,7 @@ def render_planejamento_page():
             # Se houver gastos para o mês atual
             if not gastos_mes.empty and 'tipo' in gastos_mes.columns and 'valor' in gastos_mes.columns:
                 # Converter tipo para minúsculas para evitar problemas de case
-                gastos_mes['tipo'] = gastos_mes['tipo'].str.lower() if hasattr(gastos_mes['tipo'], 'str') else gastos_mes['tipo']
+                gastos_mes['tipo'] = gastos_mes['tipo'].str.lower() if hasattr(gastos_mes['tipo'], 'str') else gastos_mes['tipo'].astype(str).str.lower()
                 
                 # Gastos reais
                 gastos_fixos_reais = gastos_mes[gastos_mes['tipo'] == 'fixo']['valor'].sum()
@@ -167,6 +167,12 @@ def render_planejamento_page():
                 
                 st.write(f"Total de gastos fixos: R$ {gastos_fixos_reais:.2f}")
                 st.write(f"Total de gastos variáveis: R$ {gastos_variaveis_reais:.2f}")
+                
+                # Adicionar debug para verificar os tipos de gastos encontrados
+                if st.checkbox("Verificar tipos de gastos", value=False):
+                    st.write("Tipos de gastos encontrados:", gastos_mes['tipo'].unique())
+                    st.write("Número de gastos fixos:", len(gastos_mes[gastos_mes['tipo'] == 'fixo']))
+                    st.write("Número de gastos variáveis:", len(gastos_mes[gastos_mes['tipo'] == 'variavel']))
             else:
                 gastos_fixos_reais = 0
                 gastos_variaveis_reais = 0

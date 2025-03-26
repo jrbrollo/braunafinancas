@@ -476,7 +476,16 @@ def add_gasto(gasto):
                 
             # Garantir tipo e categoria
             if 'tipo' not in gasto:
-                gasto['tipo'] = "outros"
+                gasto['tipo'] = "variavel"  # Valor padrão em minúsculas
+            else:
+                # Converter para minúsculas para garantir consistência
+                gasto['tipo'] = gasto['tipo'].lower()
+                
+                # Normalizar "Fixo"/"Variável" para "fixo"/"variavel"
+                if gasto['tipo'] == "fixo" or gasto['tipo'] == "fíxo" or gasto['tipo'] == "fixado":
+                    gasto['tipo'] = "fixo"
+                elif gasto['tipo'] == "variável" or gasto['tipo'] == "variavel" or gasto['tipo'] == "variable":
+                    gasto['tipo'] = "variavel"
                 
             if 'categoria' not in gasto:
                 gasto['categoria'] = "outros"

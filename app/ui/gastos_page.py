@@ -228,15 +228,15 @@ def render_gastos_page():
                         
                         # Se for marcado como recorrente, sempre é fixo
                         if gasto_recorrente:
-                            tipo_final = "Fixo"
+                            tipo_final = "fixo"  # Usar minúsculas para consistência
                         else:
                             # Se não for recorrente, seguir a regra da categoria
                             if categoria in categorias_fixas:
-                                tipo_final = "Fixo"
+                                tipo_final = "fixo"  # Usar minúsculas para consistência
                             elif categoria in categorias_variaveis:
-                                tipo_final = "Variável"
+                                tipo_final = "variavel"  # Usar minúsculas para consistência e corrigir para "variavel"
                             else:  # Para "Outros" ou categorias não listadas
-                                tipo_final = "Variável"  # Default para outros
+                                tipo_final = "variavel"  # Default para outros
                 
                         # Criar o novo gasto
                         novo_gasto = {
@@ -996,7 +996,7 @@ def render_gastos_page():
             
             with col_filtro2:
                 # Adicionar filtro por tipo (Fixo/Variável)
-                tipos = ["Todos", "Fixo", "Variável"]
+                tipos = ["Todos", "fixo", "variavel"]
                 tipo_filtro = st.selectbox("Filtrar por tipo:", options=tipos)
             
             # Aplicar filtros
@@ -1032,7 +1032,7 @@ def render_gastos_page():
                 icone = icones_categorias.get(categoria, '📋')
                 
                 # Determinar a classe do badge baseado no tipo
-                badge_class = "badge-fixo" if row['tipo'] == 'Fixo' else "badge-variavel"
+                badge_class = "badge-fixo" if row['tipo'] == 'fixo' else "badge-variavel"
                 
                 st.markdown(f"""
                 <div class="card-gasto">
@@ -1157,7 +1157,7 @@ def cadastrar_gasto():
         'descricao': [descricao],
         'valor': [valor],
         'categoria': [categoria],
-        'tipo': ['Fixo' if gasto_recorrente else 'Variável']
+        'tipo': ['fixo' if gasto_recorrente else 'variavel']  # Usar minúsculas para consistência
     })
     
     # Adicionar ao DataFrame existente
