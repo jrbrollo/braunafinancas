@@ -658,60 +658,32 @@ def render_planejamento_page():
         # Fechando o grid
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Abordagem melhorada: sobrepor o botão real ao botão visual
+        # Estilizar o botão do Streamlit para ficar verde
         st.markdown("""
         <style>
-        /* Estilo para o contêiner do botão */
-        .button-container {
-            position: relative;
-            width: 100%;
-            height: 50px;
-            margin-top: 20px;
+        /* Estilizar o botão nativo do Streamlit para ficar verde */
+        [data-testid="baseButton-primary"] {
+            background: linear-gradient(90deg, #4CAF50, #2E7D32) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: bold !important;
+            padding: 0.5rem 1rem !important;
+            text-align: center !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+            transition: transform 0.2s, box-shadow 0.2s !important;
         }
         
-        /* Estilo para o botão visual (verde) */
-        .visual-button {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            padding: 12px;
-            background: linear-gradient(90deg, #4CAF50, #2E7D32);
-            color: white;
-            border-radius: 10px;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1;
-            pointer-events: none; /* Importante: desativa interações com este elemento */
-        }
-        
-        /* Fazer o botão do Streamlit ficar completamente invisível mas ativo */
-        [data-testid="baseButton-secondary"] {
-            visibility: hidden !important;
-            height: 50px;
-        }
-        
-        /* Garantir que apenas este botão específico seja afetado */
-        #details-button button {
-            opacity: 0 !important;
-            position: relative;
-            z-index: 2;
+        [data-testid="baseButton-primary"]:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15) !important;
         }
         </style>
-        
-        <div class="button-container">
-            <div class="visual-button">👁️ Ver todos os gastos detalhados</div>
-        </div>
         """, unsafe_allow_html=True)
         
-        # Botão do Streamlit (agora invisível mas funcional)
-        # Com div específica para identificação
-        with st.container():
-            st.markdown('<div id="details-button">', unsafe_allow_html=True)
-            if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
-                st.session_state.mostrar_detalhes_gastos = True
-            st.markdown('</div>', unsafe_allow_html=True)
+        # Botão do Streamlit com emoji no texto
+        if st.button("👁️ Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
+            st.session_state.mostrar_detalhes_gastos = True
             
         # Mostrar detalhes completos se o botão foi clicado
         if st.session_state.get("mostrar_detalhes_gastos", False):
