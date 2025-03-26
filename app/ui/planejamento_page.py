@@ -11,6 +11,10 @@ def render_planejamento_page():
     """
     st.title("📊 Meu Planejamento")
     
+    # Inicializar variáveis de estado
+    if "mostrar_detalhes_gastos" not in st.session_state:
+        st.session_state.mostrar_detalhes_gastos = False
+    
     # Carregar dados
     dados_usuario = load_user_data()
     # Carregar gastos diretamente da função especializada
@@ -230,26 +234,170 @@ def render_planejamento_page():
             else:
                 progresso_variaveis = 0
             
-            # Barras de progresso
-            st.markdown("**Gastos Fixos**")
-            st.progress(min(progresso_fixos / 100, 1.0))
-            st.markdown(f"R$ {gastos_fixos_reais:.2f} / R$ {gastos_fixos_plan:.2f}")
+            # Criar uma área mais destacada para o progresso
+            st.markdown("""
+            <style>
+            .progress-container {
+                background-color: var(--background-secondary, #f8f9fa);
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            .progress-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            .progress-detail {
+                margin-top: 5px;
+                font-size: 0.9em;
+                color: var(--text-color-secondary);
+            }
+            .alert-box {
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+                font-weight: bold;
+            }
+            .alert-warning {
+                background-color: #FFF3CD;
+                color: #856404;
+                border-left: 5px solid #FFD700;
+            }
+            .alert-danger {
+                background-color: #F8D7DA;
+                color: #721C24;
+                border-left: 5px solid #DC3545;
+            }
+            .alert-success {
+                background-color: #D4EDDA;
+                color: #155724;
+                border-left: 5px solid #28A745;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             
-            st.markdown("**Gastos Variáveis**")
-            st.progress(min(progresso_variaveis / 100, 1.0))
-            st.markdown(f"R$ {gastos_variaveis_reais:.2f} / R$ {gastos_variaveis_plan:.2f}")
+            # Seção de Gastos Fixos com detalhamento
+            st.markdown('<div class="progress-container">', unsafe_allow_html=True)
+            st.markdown('<div class="progress-header"><span>Gastos Fixos</span><span>R$ {:.2f} / R$ {:.2f}</span></div>'.format(
+                gastos_fixos_reais, gastos_fixos_plan
+            ), unsafe_allow_html=True)
             
-            # Alertas
+            # Barra de progresso com cores diferentes baseadas no progresso
+            progresso_fixos_normalizado = min(progresso_fixos / 100, 1.0)
+            cor_barra_fixos = "#4CAF50"  # Verde por padrão
             if progresso_fixos > 100:
-                st.error("⚠️ Você ultrapassou o limite planejado para gastos fixos!")
-            if progresso_variaveis > 100:
-                st.error("⚠️ Você ultrapassou o limite planejado para gastos variáveis!")
+                cor_barra_fixos = "#DC3545"  # Vermelho se ultrapassou
+            elif progresso_fixos > 80:
+                cor_barra_fixos = "#FFC107"  # Amarelo se próximo do limite
+                
+            st.progress(progresso_fixos_normalizado, text=f"{progresso_fixos:.1f}%")
             
-            # Sugestões
-            if progresso_fixos > 80:
-                st.warning("💡 Você está próximo do limite de gastos fixos. Considere revisar seus gastos.")
-            if progresso_variaveis > 80:
-                st.warning("💡 Você está próximo do limite de gastos variáveis. Considere revisar seus gastos.")
+            # Listar gastos fixos se houver
+            if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                gastos_fixos_lista = gastos_mes[gastos_mes['tipo'] == 'fixo'].sort_values('valor', ascending=False)
+                if not gastos_fixos_lista.empty:
+                    st.markdown('<div class="progress-detail">', unsafe_allow_html=True)
+                    st.markdown('**Principais gastos fixos:**', unsafe_allow_html=True)
+                    
+                    for i, (_, row) in enumerate(gastos_fixos_lista.iterrows()):
+                        if i < 5:  # Mostrar apenas os 5 principais para não sobrecarregar
+                            st.markdown(f"• {row.get('descricao', 'Sem descrição')}: R$ {row['valor']:.2f} ({row.get('categoria', 'Sem categoria')})", unsafe_allow_html=True)
+                    
+                    if len(gastos_fixos_lista) > 5:
+                        st.markdown(f"• ... e mais {len(gastos_fixos_lista) - 5} gastos", unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Alertas para gastos fixos
+            if progresso_fixos > 100:
+                st.markdown('<div class="alert-box alert-danger">⚠️ Você ultrapassou o limite planejado para gastos fixos!</div>', unsafe_allow_html=True)
+            elif progresso_fixos > 80:
+                st.markdown('<div class="alert-box alert-warning">💡 Você está próximo do limite de gastos fixos. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="alert-box alert-success">✅ Seus gastos fixos estão dentro do planejado!</div>', unsafe_allow_html=True)
+                
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Seção de Gastos Variáveis com detalhamento
+            st.markdown('<div class="progress-container">', unsafe_allow_html=True)
+            st.markdown('<div class="progress-header"><span>Gastos Variáveis</span><span>R$ {:.2f} / R$ {:.2f}</span></div>'.format(
+                gastos_variaveis_reais, gastos_variaveis_plan
+            ), unsafe_allow_html=True)
+            
+            # Barra de progresso com cores diferentes baseadas no progresso
+            progresso_variaveis_normalizado = min(progresso_variaveis / 100, 1.0)
+            cor_barra_variaveis = "#4CAF50"  # Verde por padrão
+            if progresso_variaveis > 100:
+                cor_barra_variaveis = "#DC3545"  # Vermelho se ultrapassou
+            elif progresso_variaveis > 80:
+                cor_barra_variaveis = "#FFC107"  # Amarelo se próximo do limite
+                
+            st.progress(progresso_variaveis_normalizado, text=f"{progresso_variaveis:.1f}%")
+            
+            # Listar gastos variáveis se houver
+            if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                gastos_variaveis_lista = gastos_mes[gastos_mes['tipo'] == 'variavel'].sort_values('valor', ascending=False)
+                if not gastos_variaveis_lista.empty:
+                    st.markdown('<div class="progress-detail">', unsafe_allow_html=True)
+                    st.markdown('**Principais gastos variáveis:**', unsafe_allow_html=True)
+                    
+                    for i, (_, row) in enumerate(gastos_variaveis_lista.iterrows()):
+                        if i < 5:  # Mostrar apenas os 5 principais para não sobrecarregar
+                            st.markdown(f"• {row.get('descricao', 'Sem descrição')}: R$ {row['valor']:.2f} ({row.get('categoria', 'Sem categoria')})", unsafe_allow_html=True)
+                    
+                    if len(gastos_variaveis_lista) > 5:
+                        st.markdown(f"• ... e mais {len(gastos_variaveis_lista) - 5} gastos", unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Alertas para gastos variáveis - corrigida a lógica para não mostrar dois alertas
+            if progresso_variaveis > 100:
+                st.markdown('<div class="alert-box alert-danger">⚠️ Você ultrapassou o limite planejado para gastos variáveis!</div>', unsafe_allow_html=True)
+            elif progresso_variaveis > 80:
+                st.markdown('<div class="alert-box alert-warning">💡 Você está próximo do limite de gastos variáveis. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="alert-box alert-success">✅ Seus gastos variáveis estão dentro do planejado!</div>', unsafe_allow_html=True)
+                
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Botão para ver todos os gastos em detalhe
+            if st.button("Ver todos os gastos detalhados", use_container_width=True):
+                st.session_state.mostrar_detalhes_gastos = True
+                
+            # Mostrar detalhes completos se o botão foi clicado
+            if st.session_state.get("mostrar_detalhes_gastos", False):
+                # Criar tabs para separar fixos e variáveis
+                tab_fixos, tab_variaveis = st.tabs(["Gastos Fixos", "Gastos Variáveis"])
+                
+                with tab_fixos:
+                    if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                        gastos_fixos_df = gastos_mes[gastos_mes['tipo'] == 'fixo'].sort_values('valor', ascending=False)
+                        if not gastos_fixos_df.empty:
+                            # Preparar DataFrame para exibição
+                            display_df = gastos_fixos_df[['descricao', 'valor', 'categoria', 'data']].copy()
+                            display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
+                            st.dataframe(display_df, use_container_width=True)
+                        else:
+                            st.info("Não há gastos fixos registrados neste mês.")
+                
+                with tab_variaveis:
+                    if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                        gastos_variaveis_df = gastos_mes[gastos_mes['tipo'] == 'variavel'].sort_values('valor', ascending=False)
+                        if not gastos_variaveis_df.empty:
+                            # Preparar DataFrame para exibição
+                            display_df = gastos_variaveis_df[['descricao', 'valor', 'categoria', 'data']].copy()
+                            display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
+                            st.dataframe(display_df, use_container_width=True)
+                        else:
+                            st.info("Não há gastos variáveis registrados neste mês.")
+                
+                # Botão para fechar os detalhes
+                if st.button("Fechar detalhes", use_container_width=True):
+                    st.session_state.mostrar_detalhes_gastos = False
+                    st.rerun()
         else:
             st.info("ℹ️ Crie seu planejamento usando o formulário ao lado.")
     
