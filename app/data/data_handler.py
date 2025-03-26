@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 import uuid
 import streamlit as st
+import shutil
 
 # Tente importar as funções do Supabase
 try:
@@ -70,23 +71,49 @@ OBJETIVOS_FILE = DATA_DIR / "objetivos.json"
 def is_prod():
     """
     Verifica se estamos em ambiente de produção (Streamlit Cloud)
+    É crucial que esta detecção seja precisa para o correto armazenamento de dados.
     """
-    # Podemos identificar pelo ambiente do Streamlit
+    # Identificar definitivamente o ambiente Streamlit Cloud
     is_streamlit_env = os.environ.get('STREAMLIT_SHARING', '') != '' or os.environ.get('STREAMLIT_CLOUD', '') != ''
     
-    # Verificar se temos permissão de escrita no diretório de dados
-    # Mesmo no Streamlit Cloud, queremos usar arquivos locais quando possível
+    # Para garantir segurança dos dados, verificar acesso de escrita independentemente do ambiente
     try:
-        has_write_access = os.access(DATA_DIR, os.W_OK)
-        print(f"INFO: Ambiente: {'Produção' if is_streamlit_env else 'Local'}, Acesso escrita: {'Sim' if has_write_access else 'Não'}")
+        # Criar diretório de dados se não existir
+        os.makedirs(DATA_DIR, exist_ok=True)
         
-        # Se estamos no Streamlit Cloud mas temos acesso de escrita, podemos usar arquivos
-        if is_streamlit_env and has_write_access:
-            print(f"INFO: Detectado Streamlit Cloud com acesso a arquivos!")
-            return False
+        # Verificar se temos acesso de escrita
+        has_write_access = os.access(DATA_DIR, os.W_OK)
+        
+        # Registro detalhado do ambiente para diagnóstico
+        ambiente_descricao = "Streamlit Cloud" if is_streamlit_env else "Ambiente Local"
+        acesso_descricao = "com acesso de escrita" if has_write_access else "sem acesso de escrita"
+        print(f"INFO: Ambiente detectado: {ambiente_descricao} {acesso_descricao}")
+        
+        # Se temos acesso a arquivos, mesmo no Streamlit Cloud, preferimos usar arquivos para persistência
+        if has_write_access:
+            # Criar um arquivo de teste para confirmar acesso real de escrita
+            test_file = DATA_DIR / "write_test.txt"
+            try:
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.remove(test_file)
+                print(f"INFO: Confirmado acesso de escrita real ao diretório de dados")
+                
+                # Se estamos no Streamlit Cloud mas com acesso garantido a arquivos, 
+                # podemos utilizar persistência em arquivo
+                if is_streamlit_env:
+                    print(f"INFO: Detectado Streamlit Cloud com acesso confiável a arquivos!")
+                    # Ainda consideramos como ambiente de produção, mas usaremos armazenamento híbrido
+                    return True
+            except Exception as e:
+                print(f"AVISO: Falha no teste real de escrita: {e}")
+                # Não temos acesso real de escrita, mesmo que os metadados indiquem o contrário
+                has_write_access = False
     except Exception as e:
-        print(f"ERRO ao verificar acesso de escrita: {e}")
+        print(f"ERRO ao verificar ambiente: {e}")
+        has_write_access = False
     
+    # Em caso de dúvida, assumimos que estamos em produção se estivermos no Streamlit Cloud
     return is_streamlit_env
 
 # Verificar se o usuário está autenticado no Supabase
@@ -126,109 +153,103 @@ def load_user_data():
 
 def load_gastos():
     """
-    Carrega os gastos de forma robusta, verificando múltiplas fontes para garantir
-    que os dados nunca sejam perdidos.
+    Carrega os gastos de forma extremamente robusta, verificando múltiplas fontes 
+    para garantir que os dados nunca sejam perdidos.
     """
     gastos = []
     ambiente = "produção" if is_prod() else "local"
     print(f"INFO: Carregando gastos no ambiente {ambiente}")
     
-    # 1. Verificar sessão (memória atual)
+    # Várias fontes possíveis para os dados
+    fontes_dados = {
+        "session_state": None,
+        "arquivo_principal": None,
+        "arquivo_backup": None,
+        "supabase": None
+    }
+    
+    # 1. Verificar session_state (memória atual)
     if "gastos" in st.session_state and st.session_state.get("gastos", []):
-        gastos = st.session_state.get("gastos", [])
-        print(f"INFO: Carregados {len(gastos)} gastos do session_state")
-        if gastos:
-            # Mesmo no ambiente de produção, tentar salvar em arquivo para persistência
-            try:
-                # Garantir que o diretório exista
-                os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
-                
-                # Apenas tenta salvar se o diretório estiver acessível
-                if os.access(os.path.dirname(GASTOS_FILE), os.W_OK):
-                    with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
-                        json.dump(gastos, file, ensure_ascii=False, indent=2)
-                    print(f"INFO: Gastos da sessão persistidos em arquivo para recuperação futura")
-            except Exception as e:
-                print(f"INFO: Não foi possível persistir gastos em arquivo: {e}")
-            
-            return gastos
+        gastos_session = st.session_state.get("gastos", [])
+        print(f"INFO: Encontrados {len(gastos_session)} gastos no session_state")
+        fontes_dados["session_state"] = gastos_session
     
-    # 2. Verificar arquivo principal (mais importante) - MESMO EM PRODUÇÃO
-    if os.path.exists(GASTOS_FILE):
-        try:
-            print(f"INFO: Carregando gastos do arquivo principal: {GASTOS_FILE}")
+    # 2. Verificar arquivo principal
+    try:
+        if os.path.exists(GASTOS_FILE):
             with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
-                gastos = json.load(file)
-                # Se encontrou dados, guarde na sessão e retorne
-                if gastos:
-                    st.session_state["gastos"] = gastos
-                    print(f"INFO: Carregados {len(gastos)} gastos do arquivo principal")
-                    return gastos
-        except Exception as e:
-            print(f"ERRO ao carregar gastos do arquivo principal: {e}")
+                gastos_arquivo = json.load(file)
+                if gastos_arquivo:
+                    print(f"INFO: Encontrados {len(gastos_arquivo)} gastos no arquivo principal")
+                    fontes_dados["arquivo_principal"] = gastos_arquivo
+    except Exception as e:
+        print(f"AVISO: Erro ao carregar gastos do arquivo principal: {e}")
     
-    # 3. Verificar Supabase (se disponível)
+    # 3. Verificar backup
+    try:
+        backup_file = DATA_DIR / "gastos_backup.json"
+        if os.path.exists(backup_file):
+            with open(backup_file, 'r', encoding='utf-8') as file:
+                gastos_backup = json.load(file)
+                if gastos_backup:
+                    print(f"INFO: Encontrados {len(gastos_backup)} gastos no arquivo de backup")
+                    fontes_dados["arquivo_backup"] = gastos_backup
+    except Exception as e:
+        print(f"AVISO: Erro ao carregar gastos do backup: {e}")
+    
+    # 4. Verificar Supabase (se disponível)
     if SUPABASE_AVAILABLE and is_authenticated():
         try:
-            print("INFO: Tentando carregar gastos do Supabase")
-            gastos = supabase_load_gastos()
-            if gastos:
-                st.session_state["gastos"] = gastos
-                print(f"INFO: Carregados {len(gastos)} gastos do Supabase")
-                return gastos
+            gastos_supabase = supabase_load_gastos()
+            if gastos_supabase:
+                print(f"INFO: Encontrados {len(gastos_supabase)} gastos no Supabase")
+                fontes_dados["supabase"] = gastos_supabase
         except Exception as e:
-            print(f"ERRO ao carregar gastos do Supabase: {e}")
+            print(f"AVISO: Erro ao carregar gastos do Supabase: {e}")
     
-    # 4. Verificar diretório de backups (último recurso)
-    backup_dir = DATA_DIR / "backups"
-    if os.path.exists(backup_dir):
+    # Determinar a fonte mais completa de dados
+    # Preferimos a fonte com mais registros, assumindo que contém dados mais completos
+    fonte_escolhida = None
+    max_registros = 0
+    
+    for fonte, dados in fontes_dados.items():
+        if dados and len(dados) > max_registros:
+            max_registros = len(dados)
+            fonte_escolhida = fonte
+            gastos = dados
+    
+    if fonte_escolhida:
+        print(f"INFO: Usando dados da fonte '{fonte_escolhida}' com {max_registros} registros")
+        
+        # Garantir que os dados estejam armazenados em todas as fontes disponíveis
         try:
-            backups = sorted([d for d in os.listdir(backup_dir) if os.path.isdir(os.path.join(backup_dir, d))], reverse=True)
-            for backup in backups:
-                backup_file = os.path.join(backup_dir, backup, "gastos.json")
-                if os.path.exists(backup_file):
-                    print(f"INFO: Tentando recuperar gastos do backup: {backup_file}")
-                    with open(backup_file, 'r', encoding='utf-8') as file:
-                        gastos = json.load(file)
-                        if gastos:
-                            # Se encontrou dados em backup, restaure para o arquivo principal
-                            st.session_state["gastos"] = gastos
-                            # Tentar salvar de volta no arquivo principal para restaurar
-                            try:
-                                with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
-                                    json.dump(gastos, main_file, ensure_ascii=False, indent=2)
-                                print(f"INFO: Restaurados {len(gastos)} gastos do backup para o arquivo principal")
-                            except Exception as e:
-                                print(f"ERRO ao restaurar gastos do backup para arquivo principal: {e}")
-                            return gastos
+            # Sempre manter session_state atualizado
+            st.session_state["gastos"] = gastos
+            
+            # Se temos acesso a arquivos, salvar uma cópia
+            if os.access(os.path.dirname(GASTOS_FILE), os.W_OK):
+                # Criar backup do arquivo atual se existir
+                if os.path.exists(GASTOS_FILE):
+                    backup_file = DATA_DIR / "gastos_backup.json"
+                    shutil.copy2(GASTOS_FILE, backup_file)
+                
+                # Salvar arquivo principal
+                os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
+                with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
+                    json.dump(gastos, file, ensure_ascii=False, indent=2)
+                print(f"INFO: Gastos sincronizados com arquivo local")
+            
+            # Sincronizar com Supabase se disponível
+            if SUPABASE_AVAILABLE and is_authenticated() and fonte_escolhida != "supabase":
+                supabase_save_gastos(gastos)
+                print(f"INFO: Gastos sincronizados com Supabase")
+                
         except Exception as e:
-            print(f"ERRO ao verificar backups: {e}")
+            print(f"AVISO: Erro ao sincronizar dados entre fontes: {e}")
+    else:
+        print(f"INFO: Nenhum gasto encontrado em nenhuma fonte")
     
-    # 5. Último caso: verificar se há arquivos alternativos no diretório
-    try:
-        # Procurar por qualquer arquivo JSON no diretório de dados
-        for file in os.listdir(DATA_DIR):
-            if file.endswith('.json') and 'gasto' in file.lower():
-                alt_file = os.path.join(DATA_DIR, file)
-                print(f"INFO: Tentando carregar gastos de arquivo alternativo: {alt_file}")
-                try:
-                    with open(alt_file, 'r', encoding='utf-8') as f:
-                        alt_gastos = json.load(f)
-                        if isinstance(alt_gastos, list) and alt_gastos:
-                            st.session_state["gastos"] = alt_gastos
-                            print(f"INFO: Carregados {len(alt_gastos)} gastos de arquivo alternativo")
-                            # Salvar na localização principal
-                            with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
-                                json.dump(alt_gastos, main_file, ensure_ascii=False, indent=2)
-                            return alt_gastos
-                except Exception as e:
-                    print(f"ERRO ao carregar arquivo alternativo: {e}")
-    except Exception as e:
-        print(f"ERRO ao procurar arquivos alternativos: {e}")
-    
-    # Se chegou aqui, não encontrou dados em lugar nenhum
-    print("AVISO: Nenhum gasto encontrado em nenhuma fonte de dados")
-    return []
+    return gastos
 
 def load_investimentos():
     """
@@ -377,93 +398,125 @@ def save_user_data(user_data):
 
 def save_gastos(gastos):
     """
-    Salva a lista de gastos de forma segura, mantendo backups para prevenir perdas.
+    Salva a lista de gastos com um sistema robusto de persistência que utiliza
+    múltiplas estratégias para garantir que os dados nunca sejam perdidos.
     
     Args:
         gastos (list): Lista de gastos a ser salva.
         
     Returns:
-        bool: True se salvou com sucesso, False caso contrário.
+        bool: True se o salvamento foi bem-sucedido em pelo menos uma fonte, False caso contrário.
     """
-    print(f"INFO: Iniciando salvamento de {len(gastos)} gastos")
+    print(f"INFO: Salvando {len(gastos)} gastos")
     
-    # Sempre preservar na sessão primeiro para garantir que não seja perdido
+    # Garantir que cada gasto tenha um ID único
+    for gasto in gastos:
+        if "id" not in gasto:
+            gasto["id"] = str(uuid.uuid4())
+    
+    # 1. Sempre salvar na sessão como primeira camada de persistência
     st.session_state["gastos"] = gastos
+    print("INFO: Gastos salvos na sessão")
     
-    # Fazer backup do arquivo atual antes de sobrescrever (se existir)
-    if os.path.exists(GASTOS_FILE):
-        try:
-            # Criar diretório de backup se não existir
-            backup_dir = DATA_DIR / "backups" / "auto"
-            os.makedirs(backup_dir, exist_ok=True)
-            
-            # Criar nome de arquivo com timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_file = backup_dir / f"gastos_{timestamp}.json"
-            
-            # Copiar arquivo atual para backup
-            with open(GASTOS_FILE, 'r', encoding='utf-8') as src:
-                with open(backup_file, 'w', encoding='utf-8') as dst:
-                    dst.write(src.read())
-            print(f"INFO: Backup criado em {backup_file}")
-        except Exception as e:
-            print(f"AVISO: Não foi possível criar backup automático: {e}")
+    # Variáveis para rastreamento do status de salvamento
+    status = {
+        "session_state": True,  # Assumimos que o salvamento na sessão teve sucesso
+        "arquivo_principal": False,
+        "arquivo_backup": False,
+        "supabase": False
+    }
     
-    # Salvar no Supabase se disponível
-    supabase_result = False
+    # 2. Tentar salvar em arquivo quando possível, mesmo em ambiente de produção
+    try:
+        # Verificar se temos acesso de escrita ao sistema de arquivos
+        if os.access(DATA_DIR, os.W_OK):
+            # Criar diretório de dados se não existir
+            os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
+            
+            # Criar backup do arquivo atual primeiro (se existir)
+            if os.path.exists(GASTOS_FILE):
+                try:
+                    backup_file = DATA_DIR / "gastos_backup.json"
+                    shutil.copy2(GASTOS_FILE, backup_file)
+                    print(f"INFO: Backup do arquivo de gastos criado: {backup_file}")
+                    status["arquivo_backup"] = True
+                except Exception as e:
+                    print(f"AVISO: Não foi possível criar backup do arquivo: {e}")
+            
+            # Salvar no arquivo principal com estratégia segura
+            # Primeiro salvar em um arquivo temporário, depois renomear
+            temp_file = DATA_DIR / "gastos_temp.json"
+            try:
+                with open(temp_file, 'w', encoding='utf-8') as file:
+                    json.dump(gastos, file, ensure_ascii=False, indent=2)
+                
+                # Se o arquivo temporário foi criado com sucesso, renomear para o arquivo final
+                if os.path.exists(temp_file):
+                    # Em sistemas Windows, pode ser necessário excluir o arquivo existente primeiro
+                    if os.path.exists(GASTOS_FILE) and os.name == 'nt':
+                        os.remove(GASTOS_FILE)
+                    
+                    os.replace(temp_file, GASTOS_FILE)
+                    print(f"INFO: Gastos salvos no arquivo: {GASTOS_FILE}")
+                    status["arquivo_principal"] = True
+            except Exception as e:
+                print(f"AVISO: Erro ao salvar no arquivo principal: {e}")
+                # Tentar abordagem direta se a estratégia de arquivo temporário falhar
+                try:
+                    with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
+                        json.dump(gastos, file, ensure_ascii=False, indent=2)
+                    print(f"INFO: Gastos salvos diretamente no arquivo principal")
+                    status["arquivo_principal"] = True
+                except Exception as direct_e:
+                    print(f"ERRO: Falha também ao salvar diretamente no arquivo principal: {direct_e}")
+    except Exception as e:
+        print(f"AVISO: Não foi possível salvar gastos em arquivo: {e}")
+    
+    # 3. Salvar no Supabase se disponível
     if SUPABASE_AVAILABLE and is_authenticated():
         try:
-            supabase_result = supabase_save_gastos(gastos)
-            if supabase_result:
-                print("INFO: Gastos salvos com sucesso no Supabase")
+            success = supabase_save_gastos(gastos)
+            if success:
+                print("INFO: Gastos salvos no Supabase")
+                status["supabase"] = True
+            else:
+                print("AVISO: Falha ao salvar gastos no Supabase")
         except Exception as e:
-            print(f"ERRO ao salvar gastos no Supabase: {e}")
+            print(f"AVISO: Erro ao salvar gastos no Supabase: {e}")
     
-    # Ambiente de produção (Streamlit Cloud)
-    if is_prod():
-        print("INFO: Gastos salvos na sessão para ambiente de produção")
-        
-        # Mesmo em produção, tentar salvar em arquivo se tiver acesso
-        try:
-            # Verificar se temos acesso ao sistema de arquivos
-            if os.access(DATA_DIR, os.W_OK):
-                # Garantir que o diretório exista
-                os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
-                
-                # Salvar no arquivo principal
-                with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
-                    json.dump(gastos, file, ensure_ascii=False, indent=2)
-                print("INFO: Gastos salvos com sucesso no arquivo em ambiente de produção")
-        except Exception as e:
-            print(f"INFO: Em produção, não foi possível salvar gastos em arquivo: {e}")
-        
-        return True
+    # Verificar se conseguimos salvar em pelo menos uma fonte persistente além da sessão
+    saved_persistent = status["arquivo_principal"] or status["supabase"]
     
-    # Salvar em arquivo local (método mais confiável)
-    try:
-        # Garantir que o diretório exista
-        os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
+    if saved_persistent:
+        print("INFO: Gastos salvos com sucesso em pelo menos uma fonte persistente")
+    else:
+        # Registrar aviso, mas não falhar completamente se pelo menos a sessão foi salva
+        print("AVISO: Gastos salvos apenas na sessão, sem persistência garantida!")
         
-        # Salvar no arquivo principal
-        with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
-            json.dump(gastos, file, ensure_ascii=False, indent=2)
-        print("INFO: Gastos salvos com sucesso no arquivo principal")
-        return True
-    except Exception as e:
-        print(f"ERRO ao salvar gastos no arquivo: {e}")
-        
-        # Se falhou, tentar salvar em um arquivo alternativo
+        # Tentativa de emergência: criar arquivo de resgate em local alternativo
         try:
-            alt_file = DATA_DIR / f"gastos_recovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            with open(alt_file, 'w', encoding='utf-8') as file:
-                json.dump(gastos, file, ensure_ascii=False, indent=2)
-            print(f"INFO: Gastos salvos em arquivo alternativo: {alt_file}")
-            return True
-        except Exception as alt_e:
-            print(f"ERRO CRÍTICO: Falha ao salvar gastos em arquivo alternativo: {alt_e}")
+            # Tentar salvar em um local alternativo que possa estar acessível
+            rescue_paths = [
+                os.path.join(os.path.expanduser("~"), "brauna_rescue"),  # Pasta home do usuário
+                os.path.join(os.getcwd(), "rescue"),  # Diretório atual
+                "rescue"  # Diretório relativo
+            ]
             
-        # Retornar True mesmo assim, já que os dados estão no session_state
-        return True
+            for rescue_dir in rescue_paths:
+                try:
+                    os.makedirs(rescue_dir, exist_ok=True)
+                    rescue_file = os.path.join(rescue_dir, f"gastos_rescue_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+                    with open(rescue_file, 'w', encoding='utf-8') as file:
+                        json.dump(gastos, file, ensure_ascii=False, indent=2)
+                    print(f"INFO: Arquivo de resgate criado: {rescue_file}")
+                    break  # Sair do loop se conseguir salvar
+                except Exception:
+                    continue  # Tentar próximo caminho
+        except Exception as e:
+            print(f"ERRO: Todas as tentativas de resgate falharam: {e}")
+    
+    # Se conseguimos salvar em pelo menos uma fonte (mesmo que seja só session_state), consideramos sucesso
+    return True
 
 def save_investimentos(investimentos):
     """

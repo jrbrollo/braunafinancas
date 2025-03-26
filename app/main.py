@@ -890,41 +890,107 @@ def init_app_data():
     """
     Inicializa os dados da aplicação, incluindo a recuperação de dados históricos.
     Chamada uma vez no início da execução.
-    """
-    # Tentar carregar e restaurar dados históricos primeiro
-    print("INFO: Inicializando dados da aplicação")
     
-    # Verificar se há gastos em arquivo para restaurar
+    Esta função foi aprimorada para garantir que dados de usuários nunca sejam perdidos
+    durante a inicialização da aplicação.
+    """
+    # Registrar início da inicialização
+    print("INFO: Iniciando processo de inicialização de dados da aplicação")
+    
+    # Criar diretórios de dados necessários
+    ensure_data_dirs()
+    
+    # Verificar se o usuário está autenticado
+    is_user_authenticated = False
     try:
-        # Garantir que a sessão esteja limpa
-        if "gastos" in st.session_state:
-            del st.session_state["gastos"]
-        
-        # Carregar gastos do arquivo se existir
+        from app.database.supabase_client import is_authenticated, get_current_user
+        is_user_authenticated = is_authenticated()
+        if is_user_authenticated:
+            user = get_current_user()
+            user_id = user.get("id") if user else None
+            print(f"INFO: Usuário autenticado: {user_id}")
+            
+            # Se o usuário estiver autenticado, garantir que o user_id esteja registrado na sessão
+            st.session_state["user_id"] = user_id
+    except Exception as e:
+        print(f"AVISO: Erro ao verificar autenticação do usuário: {e}")
+    
+    # Verificar se os dados já foram carregados anteriormente nesta sessão
+    if "data_loaded" in st.session_state and st.session_state["data_loaded"]:
+        print("INFO: Dados já foram carregados nesta sessão")
+        # Verificar se não estão vazios
+        if "gastos" in st.session_state and st.session_state["gastos"]:
+            print(f"INFO: Sessão atual já contém {len(st.session_state['gastos'])} gastos")
+            # Já temos dados, não é necessário recarregar
+            return
+    
+    print("INFO: Tentando carregar dados existentes")
+    
+    # Tentar carregar dados existentes
+    dados_carregados = False
+    
+    # 1. Verificar se há gastos no arquivo
+    try:
         if os.path.exists(data_handler.GASTOS_FILE):
             print(f"INFO: Encontrado arquivo de gastos: {data_handler.GASTOS_FILE}")
             with open(data_handler.GASTOS_FILE, 'r', encoding='utf-8') as file:
                 gastos = json.load(file)
                 if gastos:
                     st.session_state["gastos"] = gastos
-                    print(f"INFO: Restaurados {len(gastos)} gastos para a sessão")
+                    print(f"INFO: Carregados {len(gastos)} gastos do arquivo para a sessão")
+                    dados_carregados = True
     except Exception as e:
-        print(f"ERRO ao restaurar gastos históricos: {e}")
+        print(f"AVISO: Erro ao carregar gastos do arquivo: {e}")
     
-    # Verificar se já inicializamos dados de exemplo
+    # 2. Verificar Supabase para usuários autenticados
+    if not dados_carregados and is_user_authenticated:
+        try:
+            from app.database.supabase_client import supabase_load_gastos
+            gastos_supabase = supabase_load_gastos()
+            if gastos_supabase:
+                st.session_state["gastos"] = gastos_supabase
+                print(f"INFO: Carregados {len(gastos_supabase)} gastos do Supabase para a sessão")
+                dados_carregados = True
+        except Exception as e:
+            print(f"AVISO: Erro ao carregar gastos do Supabase: {e}")
+    
+    # 3. Se não encontrou dados em nenhuma fonte e estamos no primeiro uso, inicializar dados de exemplo
+    if not dados_carregados:
+        print("INFO: Nenhum dado existente encontrado, verificando necessidade de inicialização de exemplo")
+        
+        # Verificar se este é o primeiro uso
+        config = load_config()
+        primeiro_uso = config.get("primeiro_uso", True)
+        
+        if primeiro_uso:
+            print("INFO: Inicializando dados de exemplo para primeiro uso")
+            try:
+                # Não inicializar dados de exemplo para usuários já autenticados
+                # para evitar a sobrescrita de dados existentes
+                if not is_user_authenticated:
+                    init_data.reset_and_initialize_data()
+                    print("INFO: Inicialização de dados de exemplo concluída")
+                else:
+                    print("INFO: Usuário autenticado, pulando inicialização de dados de exemplo")
+            except Exception as e:
+                print(f"ERRO ao inicializar dados de exemplo: {e}")
+    
+    # Marcar que os dados foram carregados nesta sessão
+    st.session_state["data_loaded"] = True
+    
+    # Verificar se já inicializamos dados de exemplo anteriormente
     if not "initial_data_loaded" in st.session_state:
-        # Inicializar dados apenas no primeiro uso
-        if st.session_state.get("primeiro_uso", True):
-            init_data.reset_and_initialize_data()
-        
-        # Marcar como inicializado
         st.session_state["initial_data_loaded"] = True
-        print("INFO: Inicialização de dados concluída")
-    else:
-        print("INFO: Dados já inicializados")
-        
+        print("INFO: Marcado que inicialização de dados foi verificada")
+    
     # Normalizar gastos para garantir consistência de tipos
-    normalizar_gastos_existentes()
+    try:
+        normalizar_gastos_existentes()
+        print("INFO: Normalização de gastos concluída")
+    except Exception as e:
+        print(f"AVISO: Erro ao normalizar gastos: {e}")
+    
+    print("INFO: Processo de inicialização de dados concluído")
 
 if __name__ == "__main__":
     main() 

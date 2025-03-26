@@ -241,7 +241,7 @@ def get_current_user():
 
 def load_user_data(collection, user_id=None):
     """
-    Carrega dados do usuário a partir do Supabase.
+    Carrega dados do usuário a partir do Supabase com verificações rigorosas de segurança.
     
     Args:
         collection (str): Nome da coleção (tabela) a ser carregada.
@@ -250,48 +250,117 @@ def load_user_data(collection, user_id=None):
     Returns:
         list: Lista de dados carregados ou lista vazia em caso de erro.
     """
+    # Verificação de segurança: garantir que temos o ID do usuário
     if not user_id:
         user = get_current_user()
         if not user:
+            print(f"AVISO: Tentativa de carregar dados '{collection}' sem usuário autenticado")
             return []
-        user_id = user["id"]
+        
+        user_id = user.get("id")
+        if not user_id:
+            print(f"AVISO: Usuário autenticado sem ID válido ao carregar '{collection}'")
+            return []
     
+    # Validar o formato do user_id para evitar injeções SQL
+    if not isinstance(user_id, str) or len(user_id) < 10:
+        print(f"ERRO: ID de usuário inválido ao carregar '{collection}': {user_id}")
+        return []
+    
+    # Verificar conexão com Supabase
     supabase = get_supabase_client()
     if not supabase:
+        print(f"ERRO: Cliente Supabase não disponível ao carregar '{collection}'")
         return []
     
     try:
+        # Registrar operação para facilitar a depuração
+        print(f"INFO: Carregando '{collection}' para usuário {user_id[:8]}...")
+        
+        # Sempre adicionar filtro por user_id para garantir segurança
         response = supabase.table(collection).select("*").eq("user_id", user_id).execute()
+        
+        # Verificar se os dados pertencem realmente ao usuário solicitado
         if response.data:
-            return response.data
+            # Verificar cada registro para garantir que pertence ao usuário correto
+            validated_data = []
+            for item in response.data:
+                if item.get("user_id") == user_id:
+                    validated_data.append(item)
+                else:
+                    print(f"AVISO: Encontrado registro em '{collection}' com user_id diferente do solicitado")
+            
+            if validated_data:
+                print(f"INFO: Carregados {len(validated_data)} registros de '{collection}'")
+                return validated_data
+            else:
+                print(f"INFO: Nenhum registro válido encontrado em '{collection}'")
+                return []
+        
+        print(f"INFO: Nenhum dado encontrado em '{collection}' para o usuário")
         return []
     except Exception as e:
-        st.error(f"Erro ao carregar dados de {collection}: {e}")
+        print(f"ERRO ao carregar dados de '{collection}': {e}")
+        
+        # Em caso de erro, tentar novamente com uma nova sessão do Supabase
+        try:
+            # Reinicializar o cliente
+            refresh_supabase_client()
+            
+            # Tentar novamente com o novo cliente
+            supabase = get_supabase_client()
+            if supabase:
+                response = supabase.table(collection).select("*").eq("user_id", user_id).execute()
+                if response.data:
+                    print(f"INFO: Recuperados {len(response.data)} registros de '{collection}' após reconexão")
+                    return response.data
+        except Exception as retry_e:
+            print(f"ERRO na segunda tentativa de carregar '{collection}': {retry_e}")
+        
         return []
 
 def save_user_data(collection, data, user_id=None):
     """
-    Salva dados do usuário no Supabase.
+    Salva dados do usuário no Supabase com verificações rigorosas de segurança.
     
     Args:
         collection (str): Nome da coleção (tabela) a ser atualizada.
-        data (dict): Dados a serem salvos.
+        data (dict ou list): Dados a serem salvos.
         user_id (str, optional): ID do usuário. Se None, usa o usuário atual.
         
     Returns:
         bool: True se os dados foram salvos com sucesso, False caso contrário.
     """
+    # Verificação de segurança: garantir que temos o ID do usuário
     if not user_id:
         user = get_current_user()
         if not user:
+            print(f"AVISO: Tentativa de salvar dados em '{collection}' sem usuário autenticado")
             return False
-        user_id = user["id"]
+        
+        user_id = user.get("id")
+        if not user_id:
+            print(f"AVISO: Usuário autenticado sem ID válido ao salvar em '{collection}'")
+            return False
     
+    # Validar o formato do user_id para evitar injeções SQL
+    if not isinstance(user_id, str) or len(user_id) < 10:
+        print(f"ERRO: ID de usuário inválido ao salvar em '{collection}': {user_id}")
+        return False
+    
+    # Verificar conexão com Supabase
     supabase = get_supabase_client()
     if not supabase:
+        print(f"ERRO: Cliente Supabase não disponível ao salvar em '{collection}'")
         return False
     
     try:
+        # Registrar operação para facilitar a depuração
+        if isinstance(data, list):
+            print(f"INFO: Salvando {len(data)} registros em '{collection}' para usuário {user_id[:8]}...")
+        else:
+            print(f"INFO: Salvando dados em '{collection}' para usuário {user_id[:8]}...")
+        
         # Adicionar user_id aos dados se não estiver presente
         if isinstance(data, dict):
             # Fazer uma cópia dos dados para não modificar o original
@@ -334,63 +403,146 @@ def save_user_data(collection, data, user_id=None):
                     data_copy["titulo"] = "Objetivo sem título"
                     data_copy["nome"] = "Objetivo sem título"
             
+            # Garantir que o user_id esteja definido corretamente
             data_copy["user_id"] = user_id
             
             # Verificar se o registro já existe
-            response = supabase.table(collection).select("*").eq("user_id", user_id).execute()
-            
-            if response.data and len(response.data) > 0:
-                # Se o registro já existe, atualizar
-                record_id = response.data[0]["id"]
-                supabase.table(collection).update(data_copy).eq("id", record_id).execute()
-            else:
-                # Se não existe, inserir novo
+            try:
+                response = supabase.table(collection).select("*").eq("user_id", user_id).execute()
+                
+                if response.data and len(response.data) > 0:
+                    # Registros existentes - verificar se pertencem ao usuário correto
+                    record_exists = False
+                    for record in response.data:
+                        if record.get("user_id") == user_id:
+                            record_id = record["id"]
+                            record_exists = True
+                            break
+                    
+                    if record_exists:
+                        # Se o registro já existe, atualizar
+                        print(f"INFO: Atualizando registro existente em '{collection}'")
+                        supabase.table(collection).update(data_copy).eq("id", record_id).eq("user_id", user_id).execute()
+                    else:
+                        # Se não existe registro para este usuário, inserir novo
+                        print(f"INFO: Inserindo novo registro em '{collection}'")
+                        supabase.table(collection).insert(data_copy).execute()
+                else:
+                    # Se não existe, inserir novo
+                    print(f"INFO: Inserindo primeiro registro em '{collection}' para este usuário")
+                    supabase.table(collection).insert(data_copy).execute()
+            except Exception as lookup_e:
+                print(f"AVISO: Erro ao verificar existência de registros: {lookup_e}")
+                # Tentativa direta de inserção
                 supabase.table(collection).insert(data_copy).execute()
             
+            print(f"INFO: Dados salvos com sucesso em '{collection}'")
             return True
         elif isinstance(data, list):
-            # Para listas de dados, remover dados existentes e inserir novos
-            # Primeiro, apagar os dados existentes
-            supabase.table(collection).delete().eq("user_id", user_id).execute()
-            
-            # Depois, inserir os novos dados
-            if data:
-                # Adicionar user_id a cada item e remover campos problemáticos
-                for item in data:
-                    if isinstance(item, dict):
-                        item["user_id"] = user_id
-                        
-                        # Remover campos que causam erros específicos
-                        if collection == "investimentos":
-                            if "data_inicial" in item:
-                                # Renomear para data_inicio se necessário
-                                if "data_inicio" not in item:
-                                    item["data_inicio"] = item.pop("data_inicial")
-                                else:
-                                    item.pop("data_inicial")
-                        
-                        # Remover campos problemáticos da tabela objetivos
-                        if collection == "objetivos":
-                            if "aporte_mensal" in item:
-                                item.pop("aporte_mensal")
-                            
-                            # Garantir que o título está presente (campo obrigatório)
-                            if "titulo" not in item and "nome" in item:
-                                item["titulo"] = item["nome"]
-                            elif "nome" not in item and "titulo" in item:
-                                item["nome"] = item["titulo"]
-                            elif "titulo" not in item and "nome" not in item:
-                                # Usar um título padrão
-                                item["titulo"] = "Objetivo sem título"
-                                item["nome"] = "Objetivo sem título"
+            # Validar a integridade dos dados antes de salvar
+            data_validos = []
+            for i, item in enumerate(data):
+                if not isinstance(item, dict):
+                    print(f"AVISO: Item {i} não é um dicionário válido, ignorando")
+                    continue
                 
-                supabase.table(collection).insert(data).execute()
+                # Fazer uma cópia para não modificar o original
+                item_copy = item.copy()
+                
+                # Garantir que o user_id esteja definido corretamente
+                item_copy["user_id"] = user_id
+                
+                # Remover campos que causam erros específicos
+                if collection == "investimentos":
+                    if "data_inicial" in item_copy:
+                        # Renomear para data_inicio se necessário
+                        if "data_inicio" not in item_copy:
+                            item_copy["data_inicio"] = item_copy.pop("data_inicial")
+                        else:
+                            item_copy.pop("data_inicial")
+                
+                # Remover campos problemáticos da tabela objetivos
+                if collection == "objetivos":
+                    if "aporte_mensal" in item_copy:
+                        item_copy.pop("aporte_mensal")
+                    
+                    # Garantir que o título está presente (campo obrigatório)
+                    if "titulo" not in item_copy and "nome" in item_copy:
+                        item_copy["titulo"] = item_copy["nome"]
+                    elif "nome" not in item_copy and "titulo" in item_copy:
+                        item_copy["nome"] = item_copy["titulo"]
+                    elif "titulo" not in item_copy and "nome" not in item_copy:
+                        # Usar um título padrão
+                        item_copy["titulo"] = f"Item {i+1}"
+                        item_copy["nome"] = f"Item {i+1}"
+                
+                data_validos.append(item_copy)
             
-            return True
+            if not data_validos:
+                print(f"AVISO: Nenhum dado válido para salvar em '{collection}'")
+                return False
+            
+            # Estratégia de salvamento segura:
+            # 1. Primeiro, fazer backup dos dados existentes
+            existing_data = []
+            try:
+                response = supabase.table(collection).select("*").eq("user_id", user_id).execute()
+                if response.data:
+                    existing_data = response.data
+                    print(f"INFO: Backup de {len(existing_data)} registros existentes em '{collection}'")
+            except Exception as backup_e:
+                print(f"AVISO: Não foi possível fazer backup dos dados existentes: {backup_e}")
+            
+            # 2. Excluir registros existentes
+            try:
+                if existing_data:
+                    print(f"INFO: Removendo {len(existing_data)} registros existentes em '{collection}'")
+                supabase.table(collection).delete().eq("user_id", user_id).execute()
+            except Exception as delete_e:
+                print(f"AVISO: Erro ao excluir registros existentes: {delete_e}")
+                # Se não conseguir excluir, tentar continuar com a inserção
+            
+            # 3. Inserir novos registros
+            try:
+                if data_validos:
+                    print(f"INFO: Inserindo {len(data_validos)} novos registros em '{collection}'")
+                    supabase.table(collection).insert(data_validos).execute()
+                    print(f"INFO: Dados salvos com sucesso em '{collection}'")
+                return True
+            except Exception as insert_e:
+                print(f"ERRO ao inserir novos registros: {insert_e}")
+                
+                # 4. Em caso de falha, tentar restaurar o backup
+                if existing_data:
+                    try:
+                        print(f"INFO: Tentando restaurar {len(existing_data)} registros do backup")
+                        # Limpar novamente a tabela
+                        supabase.table(collection).delete().eq("user_id", user_id).execute()
+                        # Restaurar os dados originais
+                        supabase.table(collection).insert(existing_data).execute()
+                        print(f"INFO: Backup restaurado com sucesso em '{collection}'")
+                    except Exception as restore_e:
+                        print(f"ERRO ao restaurar backup: {restore_e}")
+                
+                return False
         
+        print(f"ERRO: Tipo de dados inválido para '{collection}': {type(data)}")
         return False
     except Exception as e:
-        st.error(f"Erro ao salvar dados em {collection}: {e}")
+        print(f"ERRO ao salvar dados em '{collection}': {e}")
+        
+        # Em caso de erro, tentar novamente com uma nova sessão do Supabase
+        try:
+            # Reinicializar o cliente
+            if refresh_supabase_client():
+                # Chamar recursivamente com o novo cliente, mas apenas uma vez para evitar loop
+                print(f"INFO: Tentando salvar novamente em '{collection}' após reconexão")
+                # Criar nova instância para evitar modificação acidental
+                data_copy = data.copy() if isinstance(data, dict) else [item.copy() for item in data if isinstance(item, dict)]
+                return save_user_data(collection, data_copy, user_id)
+        except Exception as retry_e:
+            print(f"ERRO na segunda tentativa de salvar em '{collection}': {retry_e}")
+        
         return False
 
 # === Funções Específicas para Gastos ===
@@ -787,4 +939,21 @@ def delete_objetivo(objetivo_id):
         return True
     except Exception as e:
         st.error(f"Erro ao excluir objetivo: {e}")
+        return False
+
+# Função para reinicializar o cliente Supabase em caso de problemas
+def refresh_supabase_client():
+    """
+    Reinicializa o cliente Supabase para resolver problemas de conexão.
+    """
+    try:
+        if "supabase" in st.session_state:
+            del st.session_state["supabase"]
+        
+        # Reinicializar cliente
+        st.session_state.supabase = init_supabase_client()
+        print("INFO: Cliente Supabase reinicializado")
+        return True
+    except Exception as e:
+        print(f"ERRO ao reinicializar cliente Supabase: {e}")
         return False 

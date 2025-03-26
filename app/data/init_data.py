@@ -23,14 +23,64 @@ def is_prod():
 
 def reset_and_initialize_data():
     """
-    Função que reseta e inicializa o banco de dados com dados de exemplo.
+    Função que inicializa o banco de dados com dados de exemplo APENAS quando necessário.
+    Esta função foi aprimorada para NUNCA substituir dados reais de usuários existentes.
     Em produção (Streamlit Cloud), utiliza o session_state para armazenar os dados.
     """
+    print("INFO: Verificando necessidade de inicialização de dados")
+    
+    # Primeira camada de proteção: verificar se já inicializamos na sessão atual
     if is_prod():
-        # Verifica se os dados já foram inicializados na sessão
+        # Verificar se os dados já foram inicializados na sessão
         if 'data_initialized' in st.session_state and st.session_state['data_initialized']:
-            st.info("Dados já inicializados na sessão.")
+            print("INFO: Dados já inicializados na sessão atual, pulando inicialização")
             return
+    
+    # Segunda camada de proteção: verificar se o usuário já existe e tem dados
+    # Verificar se há gastos existentes
+    has_existing_data = False
+    
+    # Verificar os gastos nas possíveis fontes
+    try:
+        # Verificar no arquivo
+        if os.path.exists(data_handler.GASTOS_FILE):
+            try:
+                with open(data_handler.GASTOS_FILE, 'r', encoding='utf-8') as file:
+                    gastos = json.load(file)
+                    if gastos and len(gastos) > 0:
+                        print(f"INFO: Detectados {len(gastos)} gastos existentes no arquivo, pulando inicialização")
+                        has_existing_data = True
+            except Exception as e:
+                print(f"AVISO: Erro ao verificar arquivo de gastos: {e}")
+        
+        # Verificar no Supabase se disponível
+        if not has_existing_data and data_handler.SUPABASE_AVAILABLE and data_handler.is_authenticated():
+            try:
+                gastos_supabase = data_handler.supabase_load_gastos()
+                if gastos_supabase and len(gastos_supabase) > 0:
+                    print(f"INFO: Detectados {len(gastos_supabase)} gastos existentes no Supabase, pulando inicialização")
+                    has_existing_data = True
+            except Exception as e:
+                print(f"AVISO: Erro ao verificar gastos no Supabase: {e}")
+        
+        # Verificar na sessão
+        if not has_existing_data and "gastos" in st.session_state:
+            gastos_sessao = st.session_state.get("gastos", [])
+            if gastos_sessao and len(gastos_sessao) > 0:
+                print(f"INFO: Detectados {len(gastos_sessao)} gastos existentes na sessão, pulando inicialização")
+                has_existing_data = True
+    except Exception as e:
+        print(f"AVISO: Erro ao verificar existência de dados: {e}")
+    
+    # Se já tem dados, não sobrescrever
+    if has_existing_data:
+        # Marcar que a inicialização já foi verificada mas não executada
+        if is_prod():
+            st.session_state['data_initialized'] = True
+            st.session_state['data_initialization_skipped'] = True
+        return
+    
+    print("INFO: Iniciando criação de dados de exemplo")
     
     # Garantir que os diretórios de dados existam
     ensure_data_dirs()
@@ -57,21 +107,39 @@ def reset_and_initialize_data():
         "tema": "light",
         "moeda": "BRL",
         "formato_data": "DD/MM/YYYY",
-        "notificacoes": True
+        "notificacoes": True,
+        "dados_exemplo": True  # Marcar que são dados de exemplo
     }
     
-    # Salvar dados
+    # Salvar dados com log detalhado
+    print("INFO: Salvando dados de usuário de exemplo")
     data_handler.save_user_data(user_data)
+    
+    print(f"INFO: Salvando {len(gastos)} gastos de exemplo")
     data_handler.save_gastos(gastos)
+    
+    print(f"INFO: Salvando {len(investimentos)} investimentos de exemplo")
     data_handler.save_investimentos(investimentos)
+    
+    print(f"INFO: Salvando {len(dividas)} dívidas de exemplo")
     data_handler.save_dividas(dividas)
+    
+    print(f"INFO: Salvando {len(seguros)} seguros de exemplo")
     data_handler.save_seguros(seguros)
+    
+    print(f"INFO: Salvando {len(objetivos)} objetivos de exemplo")
     data_handler.save_objetivos(objetivos)
+    
+    print("INFO: Salvando configuração")
     data_handler.save_config(config)
     
+    # Marcar que os dados foram inicializados
     if is_prod():
-        # Marcar que os dados foram inicializados na sessão
         st.session_state['data_initialized'] = True
+        st.session_state['data_initialization_date'] = datetime.now().isoformat()
+        print("INFO: Dados de exemplo inicializados com sucesso na sessão")
+    else:
+        print("INFO: Dados de exemplo inicializados com sucesso em arquivos locais")
 
 def gerar_dados_gastos():
     """
