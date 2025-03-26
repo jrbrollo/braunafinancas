@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import streamlit as st
 from supabase import create_client, Client
+from datetime import datetime
 
 # Carrega variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -293,7 +294,16 @@ def save_user_data(collection, data, user_id=None):
     try:
         # Adicionar user_id aos dados se não estiver presente
         if isinstance(data, dict):
+            # Fazer uma cópia dos dados para não modificar o original
             data_copy = data.copy()
+            
+            # Remover campos que não existem na tabela para evitar erros
+            if collection == "perfis" and "data_registro" in data_copy:
+                data_copy.pop("data_registro")
+                # Usar created_at no lugar
+                if "created_at" not in data_copy:
+                    data_copy["created_at"] = datetime.now().isoformat()
+            
             data_copy["user_id"] = user_id
             
             # Verificar se o registro já existe
@@ -319,6 +329,15 @@ def save_user_data(collection, data, user_id=None):
                 for item in data:
                     if isinstance(item, dict):
                         item["user_id"] = user_id
+                        
+                        # Remover campos que causam erros específicos
+                        if collection == "investimentos":
+                            if "data_inicial" in item:
+                                # Renomear para data_inicio se necessário
+                                if "data_inicio" not in item:
+                                    item["data_inicio"] = item.pop("data_inicial")
+                                else:
+                                    item.pop("data_inicial")
                 
                 supabase.table(collection).insert(data).execute()
             
@@ -613,20 +632,30 @@ def save_objetivos(objetivos):
             supabase.table("objetivos").delete().eq("user_id", user["id"]).execute()
             return True
             
+        # Lista de objetivos válidos para inserir
+        objetivos_validos = []
+        
         # Garantir que todos os campos obrigatórios estejam presentes
         for objetivo in objetivos:
+            # Criar uma cópia para não modificar o original
+            objetivo_valido = objetivo.copy()
+            
             # Garantir que o título está presente (campo obrigatório)
-            if "titulo" not in objetivo and "nome" in objetivo:
-                objetivo["titulo"] = objetivo["nome"]
-            elif "nome" not in objetivo and "titulo" in objetivo:
-                objetivo["nome"] = objetivo["titulo"]
-            elif "titulo" not in objetivo and "nome" not in objetivo:
-                # Se nenhum dos dois estiver presente, evitar o erro
-                st.error("Erro ao salvar: objetivo sem título ou nome")
-                return False
+            if "titulo" not in objetivo_valido and "nome" in objetivo_valido:
+                objetivo_valido["titulo"] = objetivo_valido["nome"]
+            elif "nome" not in objetivo_valido and "titulo" in objetivo_valido:
+                objetivo_valido["nome"] = objetivo_valido["titulo"]
+            elif "titulo" not in objetivo_valido and "nome" not in objetivo_valido:
+                # Usar um título padrão em vez de retornar erro
+                objetivo_valido["titulo"] = "Objetivo sem título"
+                objetivo_valido["nome"] = "Objetivo sem título"
+                print("Aviso: Objetivo sem título ou nome - usando título padrão")
                 
             # Adicionar user_id em cada objetivo
-            objetivo["user_id"] = user["id"]
+            objetivo_valido["user_id"] = user["id"]
+            
+            # Adicionar à lista de objetivos válidos
+            objetivos_validos.append(objetivo_valido)
         
         # Primeiro, fazer um backup dos objetivos existentes
         objetivos_existentes = []
@@ -644,9 +673,10 @@ def save_objetivos(objetivos):
             st.error(f"Erro ao excluir objetivos existentes: {e}")
             return False
         
-        # Finalmente, insere os novos objetivos
+        # Finalmente, insere os novos objetivos (apenas os válidos)
         try:
-            supabase.table("objetivos").insert(objetivos).execute()
+            if objetivos_validos:
+                supabase.table("objetivos").insert(objetivos_validos).execute()
             return True
         except Exception as e:
             # Se falhar ao inserir, tentar restaurar o backup

@@ -24,7 +24,10 @@ from app.ui.planejamento_page import render_planejamento_page
 from app.ui.auth_page import render_auth_page, logout
 
 # Importar manipulação de dados
-from app.data.data_handler import load_config, save_config, initialize_data, ensure_data_dirs, load_gastos, save_gastos
+from app.data.data_handler import (
+    load_config, save_config, initialize_data, ensure_data_dirs, 
+    load_gastos, save_gastos, normalizar_gastos_existentes
+)
 from app.data import init_data
 
 # Importar cliente Supabase
@@ -873,51 +876,6 @@ def toggle_tema(tema=None):
     
     # Recarregar a página para aplicar o tema
     st.rerun()
-
-# Função para normalizar gastos existentes (implementada localmente)
-def normalizar_gastos_existentes():
-    """
-    Normaliza todos os gastos existentes, corrigindo os tipos para ficarem
-    no formato padronizado (fixo/variavel em minúsculas).
-    
-    Returns:
-        bool: True se os gastos foram normalizados com sucesso
-    """
-    try:
-        # Carregar todos os gastos
-        gastos = load_gastos()
-        
-        # Verificar se há gastos para normalizar
-        if not gastos:
-            return True
-            
-        # Normalizar os tipos dos gastos
-        modificados = False
-        for gasto in gastos:
-            if 'tipo' in gasto:
-                tipo_original = gasto['tipo']
-                
-                # Converter para minúscula
-                tipo_minusculo = tipo_original.lower()
-                
-                # Normalizar os valores
-                if tipo_minusculo in ['fixo', 'fíxo', 'fixado']:
-                    gasto['tipo'] = 'fixo'
-                    if tipo_original != 'fixo':
-                        modificados = True
-                elif tipo_minusculo in ['variável', 'variavel', 'variable', 'variável']:
-                    gasto['tipo'] = 'variavel'
-                    if tipo_original != 'variavel':
-                        modificados = True
-                        
-        # Se houve modificações, salvar os gastos atualizados
-        if modificados:
-            return save_gastos(gastos)
-            
-        return True
-    except Exception as e:
-        print(f"Erro ao normalizar gastos existentes: {e}")
-        return False
 
 # Função para inicializar os dados
 def init_app_data():
