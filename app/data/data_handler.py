@@ -71,7 +71,23 @@ def is_prod():
     """
     Verifica se estamos em ambiente de produção (Streamlit Cloud)
     """
-    return os.environ.get('STREAMLIT_SHARING', '') != ''
+    # Podemos identificar pelo ambiente do Streamlit
+    is_streamlit_env = os.environ.get('STREAMLIT_SHARING', '') != '' or os.environ.get('STREAMLIT_CLOUD', '') != ''
+    
+    # Verificar se temos permissão de escrita no diretório de dados
+    # Mesmo no Streamlit Cloud, queremos usar arquivos locais quando possível
+    try:
+        has_write_access = os.access(DATA_DIR, os.W_OK)
+        print(f"INFO: Ambiente: {'Produção' if is_streamlit_env else 'Local'}, Acesso escrita: {'Sim' if has_write_access else 'Não'}")
+        
+        # Se estamos no Streamlit Cloud mas temos acesso de escrita, podemos usar arquivos
+        if is_streamlit_env and has_write_access:
+            print(f"INFO: Detectado Streamlit Cloud com acesso a arquivos!")
+            return False
+    except Exception as e:
+        print(f"ERRO ao verificar acesso de escrita: {e}")
+    
+    return is_streamlit_env
 
 # Verificar se o usuário está autenticado no Supabase
 def is_authenticated():
@@ -114,15 +130,30 @@ def load_gastos():
     que os dados nunca sejam perdidos.
     """
     gastos = []
+    ambiente = "produção" if is_prod() else "local"
+    print(f"INFO: Carregando gastos no ambiente {ambiente}")
     
     # 1. Verificar sessão (memória atual)
     if "gastos" in st.session_state and st.session_state.get("gastos", []):
         gastos = st.session_state.get("gastos", [])
         print(f"INFO: Carregados {len(gastos)} gastos do session_state")
         if gastos:
+            # Mesmo no ambiente de produção, tentar salvar em arquivo para persistência
+            try:
+                # Garantir que o diretório exista
+                os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
+                
+                # Apenas tenta salvar se o diretório estiver acessível
+                if os.access(os.path.dirname(GASTOS_FILE), os.W_OK):
+                    with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
+                        json.dump(gastos, file, ensure_ascii=False, indent=2)
+                    print(f"INFO: Gastos da sessão persistidos em arquivo para recuperação futura")
+            except Exception as e:
+                print(f"INFO: Não foi possível persistir gastos em arquivo: {e}")
+            
             return gastos
     
-    # 2. Verificar arquivo principal (mais importante)
+    # 2. Verificar arquivo principal (mais importante) - MESMO EM PRODUÇÃO
     if os.path.exists(GASTOS_FILE):
         try:
             print(f"INFO: Carregando gastos do arquivo principal: {GASTOS_FILE}")
@@ -391,6 +422,21 @@ def save_gastos(gastos):
     # Ambiente de produção (Streamlit Cloud)
     if is_prod():
         print("INFO: Gastos salvos na sessão para ambiente de produção")
+        
+        # Mesmo em produção, tentar salvar em arquivo se tiver acesso
+        try:
+            # Verificar se temos acesso ao sistema de arquivos
+            if os.access(DATA_DIR, os.W_OK):
+                # Garantir que o diretório exista
+                os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
+                
+                # Salvar no arquivo principal
+                with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
+                    json.dump(gastos, file, ensure_ascii=False, indent=2)
+                print("INFO: Gastos salvos com sucesso no arquivo em ambiente de produção")
+        except Exception as e:
+            print(f"INFO: Em produção, não foi possível salvar gastos em arquivo: {e}")
+        
         return True
     
     # Salvar em arquivo local (método mais confiável)

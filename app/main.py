@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+import json
 
 # Configurar o path para funcionar tanto localmente quanto no Streamlit Cloud
 current_dir = Path(__file__).parent
@@ -721,6 +722,9 @@ def main():
     # Carregar configuração
     config = load_config()
     
+    # Função para inicializar os dados
+    init_app_data()
+    
     # Normalizar gastos existentes para garantir consistência
     normalizar_gastos_existentes()
     
@@ -759,9 +763,6 @@ def main():
     if not is_authenticated:
         return
         
-    # Inicializar dados de exemplo se for o primeiro uso (somente após autenticação)
-    dados_inicializados = initialize_data()
-    
     # Renderizar barra lateral
     render_sidebar()
     
@@ -916,6 +917,47 @@ def normalizar_gastos_existentes():
     except Exception as e:
         print(f"Erro ao normalizar gastos existentes: {e}")
         return False
+
+# Função para inicializar os dados
+def init_app_data():
+    """
+    Inicializa os dados da aplicação, incluindo a recuperação de dados históricos.
+    Chamada uma vez no início da execução.
+    """
+    # Tentar carregar e restaurar dados históricos primeiro
+    print("INFO: Inicializando dados da aplicação")
+    
+    # Verificar se há gastos em arquivo para restaurar
+    try:
+        # Garantir que a sessão esteja limpa
+        if "gastos" in st.session_state:
+            del st.session_state["gastos"]
+        
+        # Carregar gastos do arquivo se existir
+        if os.path.exists(data_handler.GASTOS_FILE):
+            print(f"INFO: Encontrado arquivo de gastos: {data_handler.GASTOS_FILE}")
+            with open(data_handler.GASTOS_FILE, 'r', encoding='utf-8') as file:
+                gastos = json.load(file)
+                if gastos:
+                    st.session_state["gastos"] = gastos
+                    print(f"INFO: Restaurados {len(gastos)} gastos para a sessão")
+    except Exception as e:
+        print(f"ERRO ao restaurar gastos históricos: {e}")
+    
+    # Verificar se já inicializamos dados de exemplo
+    if not "initial_data_loaded" in st.session_state:
+        # Inicializar dados apenas no primeiro uso
+        if st.session_state.get("primeiro_uso", True):
+            init_data.reset_and_initialize_data()
+        
+        # Marcar como inicializado
+        st.session_state["initial_data_loaded"] = True
+        print("INFO: Inicialização de dados concluída")
+    else:
+        print("INFO: Dados já inicializados")
+        
+    # Normalizar gastos para garantir consistência de tipos
+    data_handler.normalizar_gastos_existentes()
 
 if __name__ == "__main__":
     main() 
