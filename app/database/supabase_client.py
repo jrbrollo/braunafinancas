@@ -298,11 +298,41 @@ def save_user_data(collection, data, user_id=None):
             data_copy = data.copy()
             
             # Remover campos que não existem na tabela para evitar erros
-            if collection == "perfis" and "data_registro" in data_copy:
-                data_copy.pop("data_registro")
+            if collection == "perfis":
+                # Remover campos problemáticos da tabela perfis
+                if "data_registro" in data_copy:
+                    data_copy.pop("data_registro")
+                
+                if "ultima_atualizacao" in data_copy:
+                    data_copy.pop("ultima_atualizacao")
+                
                 # Usar created_at no lugar
                 if "created_at" not in data_copy:
                     data_copy["created_at"] = datetime.now().isoformat()
+            
+            # Ajustes específicos para investimentos
+            if collection == "investimentos":
+                if "data_inicial" in data_copy:
+                    # Renomear para data_inicio se necessário
+                    if "data_inicio" not in data_copy:
+                        data_copy["data_inicio"] = data_copy.pop("data_inicial")
+                    else:
+                        data_copy.pop("data_inicial")
+            
+            # Ajustes específicos para objetivos
+            if collection == "objetivos":
+                if "aporte_mensal" in data_copy:
+                    data_copy.pop("aporte_mensal")
+                
+                # Garantir que o título está presente (campo obrigatório)
+                if "titulo" not in data_copy and "nome" in data_copy:
+                    data_copy["titulo"] = data_copy["nome"]
+                elif "nome" not in data_copy and "titulo" in data_copy:
+                    data_copy["nome"] = data_copy["titulo"]
+                elif "titulo" not in data_copy and "nome" not in data_copy:
+                    # Usar um título padrão
+                    data_copy["titulo"] = "Objetivo sem título"
+                    data_copy["nome"] = "Objetivo sem título"
             
             data_copy["user_id"] = user_id
             
@@ -325,7 +355,7 @@ def save_user_data(collection, data, user_id=None):
             
             # Depois, inserir os novos dados
             if data:
-                # Adicionar user_id a cada item
+                # Adicionar user_id a cada item e remover campos problemáticos
                 for item in data:
                     if isinstance(item, dict):
                         item["user_id"] = user_id
@@ -338,6 +368,21 @@ def save_user_data(collection, data, user_id=None):
                                     item["data_inicio"] = item.pop("data_inicial")
                                 else:
                                     item.pop("data_inicial")
+                        
+                        # Remover campos problemáticos da tabela objetivos
+                        if collection == "objetivos":
+                            if "aporte_mensal" in item:
+                                item.pop("aporte_mensal")
+                            
+                            # Garantir que o título está presente (campo obrigatório)
+                            if "titulo" not in item and "nome" in item:
+                                item["titulo"] = item["nome"]
+                            elif "nome" not in item and "titulo" in item:
+                                item["nome"] = item["titulo"]
+                            elif "titulo" not in item and "nome" not in item:
+                                # Usar um título padrão
+                                item["titulo"] = "Objetivo sem título"
+                                item["nome"] = "Objetivo sem título"
                 
                 supabase.table(collection).insert(data).execute()
             
@@ -467,6 +512,14 @@ def save_investimentos(investimentos):
         if investimentos:
             for investimento in investimentos:
                 investimento["user_id"] = user["id"]
+                
+                # Verificar e ajustar campos problemáticos
+                if "data_inicial" in investimento:
+                    # Renomear para data_inicio se necessário
+                    if "data_inicio" not in investimento:
+                        investimento["data_inicio"] = investimento.pop("data_inicial")
+                    else:
+                        investimento.pop("data_inicial")
             
             supabase.table("investimentos").insert(investimentos).execute()
         
@@ -640,6 +693,10 @@ def save_objetivos(objetivos):
             # Criar uma cópia para não modificar o original
             objetivo_valido = objetivo.copy()
             
+            # Remover campos que não existem na tabela do Supabase
+            if "aporte_mensal" in objetivo_valido:
+                objetivo_valido.pop("aporte_mensal")
+            
             # Garantir que o título está presente (campo obrigatório)
             if "titulo" not in objetivo_valido and "nome" in objetivo_valido:
                 objetivo_valido["titulo"] = objetivo_valido["nome"]
@@ -650,7 +707,7 @@ def save_objetivos(objetivos):
                 objetivo_valido["titulo"] = "Objetivo sem título"
                 objetivo_valido["nome"] = "Objetivo sem título"
                 print("Aviso: Objetivo sem título ou nome - usando título padrão")
-                
+            
             # Adicionar user_id em cada objetivo
             objetivo_valido["user_id"] = user["id"]
             
