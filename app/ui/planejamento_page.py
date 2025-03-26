@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objects as go
-from app.data.data_handler import load_data, save_data, load_user_data
+from app.data.data_handler import load_data, save_data, load_user_data, load_gastos
 from app.ui.custom_style import load_custom_styles
 
 def render_planejamento_page():
@@ -13,8 +13,15 @@ def render_planejamento_page():
     
     # Carregar dados
     dados_usuario = load_user_data()
-    gastos_lista = load_data("gastos")
+    # Carregar gastos diretamente da função especializada
+    gastos_lista = load_gastos()
     planejamento_lista = load_data("planejamento")
+    
+    # Debug para verificar os dados carregados
+    if st.checkbox("Mostrar dados de debug", value=False):
+        st.write("Dados do usuário:", dados_usuario)
+        st.write("Lista de gastos:", gastos_lista[:5] if gastos_lista else "Sem gastos")
+        st.write("Planejamento:", planejamento_lista)
     
     # Converter listas para DataFrames
     gastos = pd.DataFrame(gastos_lista) if gastos_lista else pd.DataFrame()
@@ -113,6 +120,12 @@ def render_planejamento_page():
                 if gastos['data'].dtype == 'object':
                     gastos['data'] = pd.to_datetime(gastos['data'])
             
+            # Mostrar dados de debug sobre os gastos
+            if st.checkbox("Mostrar detalhes dos gastos", value=False):
+                st.write("Colunas nos gastos:", gastos.columns.tolist() if not gastos.empty else "DataFrame vazio")
+                st.write("Primeiros gastos:", gastos.head() if not gastos.empty else "Sem dados")
+                st.write("Tipos de dados:", gastos.dtypes if not gastos.empty else "Sem dados")
+            
             # Calcular gastos reais do mês atual
             hoje = datetime.now()
             mes_atual = hoje.month
@@ -122,27 +135,44 @@ def render_planejamento_page():
             if not gastos.empty and 'data' in gastos.columns:
                 try:
                     # Tentar extrair mês e ano
+                    if isinstance(gastos['data'].iloc[0], str):
+                        # Converter string para datetime se necessário
+                        st.info("Convertendo datas de string para datetime")
+                        gastos['data'] = pd.to_datetime(gastos['data'])
+                    
                     gastos_mes = gastos[
-                        (pd.to_datetime(gastos['data']).dt.month == mes_atual) & 
-                        (pd.to_datetime(gastos['data']).dt.year == ano_atual)
+                        (gastos['data'].dt.month == mes_atual) & 
+                        (gastos['data'].dt.year == ano_atual)
                     ]
+                    
+                    st.write(f"Gastos encontrados para o mês atual: {len(gastos_mes)}")
                 except Exception as e:
                     st.error(f"Erro ao filtrar gastos: {e}")
+                    st.write("Detalhes do erro:", gastos['data'].head() if not gastos.empty else "Sem dados")
                     gastos_mes = pd.DataFrame()
             else:
+                st.warning("Nenhum gasto encontrado ou coluna 'data' não existe")
+                if not gastos.empty:
+                    st.write("Colunas disponíveis:", gastos.columns.tolist())
                 gastos_mes = pd.DataFrame()
             
             # Se houver gastos para o mês atual
             if not gastos_mes.empty and 'tipo' in gastos_mes.columns and 'valor' in gastos_mes.columns:
                 # Converter tipo para minúsculas para evitar problemas de case
-                gastos_mes['tipo'] = gastos_mes['tipo'].str.lower()
+                gastos_mes['tipo'] = gastos_mes['tipo'].str.lower() if hasattr(gastos_mes['tipo'], 'str') else gastos_mes['tipo']
                 
                 # Gastos reais
                 gastos_fixos_reais = gastos_mes[gastos_mes['tipo'] == 'fixo']['valor'].sum()
                 gastos_variaveis_reais = gastos_mes[gastos_mes['tipo'] == 'variavel']['valor'].sum()
+                
+                st.write(f"Total de gastos fixos: R$ {gastos_fixos_reais:.2f}")
+                st.write(f"Total de gastos variáveis: R$ {gastos_variaveis_reais:.2f}")
             else:
                 gastos_fixos_reais = 0
                 gastos_variaveis_reais = 0
+                if not gastos_mes.empty:
+                    st.warning("Gastos encontrados mas sem colunas 'tipo' ou 'valor'")
+                    st.write("Colunas disponíveis:", gastos_mes.columns.tolist())
             
             # Pegar último planejamento registrado
             ultimo_planejamento = planejamento.iloc[-1]
