@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 # Importar funções de manipulação de dados
-from data.data_handler import (
+from ..data.data_handler import (
     load_user_data,
     load_gastos,
     save_gastos,
