@@ -19,6 +19,7 @@ from app.ui.seguros_page import render_seguros_page
 # from app.ui.config_page import render_configuracoes_page  # Nome antigo
 from app.ui.settings_page import render_settings_page
 from app.ui.objetivos_page import render_objetivos_page
+from app.ui.planejamento_page import render_planejamento_page
 from app.ui.auth_page import render_auth_page, logout
 
 # Importar manipulação de dados
@@ -662,6 +663,7 @@ def render_sidebar():
             {"icon": "🎯", "label": "Objetivos", "id": "objetivos"},
             {"icon": "💳", "label": "Dívidas", "id": "dividas"},
             {"icon": "🔒", "label": "Seguros", "id": "seguros"},
+            {"icon": "📋", "label": "Meu Planejamento", "id": "planejamento"},
             {"icon": "⚙️", "label": "Configurações", "id": "settings"}
         ]
         
@@ -786,6 +788,8 @@ def main():
         render_dividas_page()
     elif pagina_atual == "seguros":
         render_seguros_page()
+    elif pagina_atual == "planejamento":
+        render_planejamento_page()
     elif pagina_atual == "settings":
         render_settings_page()
     else:

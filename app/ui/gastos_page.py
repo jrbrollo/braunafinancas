@@ -13,7 +13,9 @@ from data.data_handler import (
     load_user_data,
     load_gastos,
     save_gastos,
-    add_gasto
+    add_gasto,
+    load_data,
+    save_data
 )
 
 def calcular_total_gastos_por_semana(gastos, mes):
@@ -1082,4 +1084,57 @@ def render_gastos_page():
         saldo = renda_mensal - total_gastos
         saldo_label = "Saldo Positivo" if saldo >= 0 else "Saldo Negativo"
         saldo_delta = f"{saldo / renda_mensal * 100:.1f}% da receita" if renda_mensal > 0 else None
-        st.metric(saldo_label, formatar_moeda(saldo), saldo_delta) 
+        st.metric(saldo_label, formatar_moeda(saldo), saldo_delta)
+
+def cadastrar_gasto():
+    """
+    Cadastra um novo gasto
+    """
+    # Carregar dados existentes
+    gastos = load_data("gastos")
+    planejamento = load_data("planejamento")
+    
+    # Obter dados do formulário
+    descricao = st.session_state.descricao_gasto
+    valor = st.session_state.valor_gasto
+    categoria = st.session_state.categoria_gasto
+    data = st.session_state.data_gasto
+    tipo = st.session_state.tipo_gasto
+    
+    # Validar se o valor não excede o planejamento
+    if not planejamento.empty:
+        if tipo == 'fixo' and valor > planejamento['gastos_fixos'].iloc[0]:
+            st.error(f"⚠️ Este gasto fixo excede o limite planejado de R$ {planejamento['gastos_fixos'].iloc[0]:.2f}")
+            return
+        elif tipo == 'variavel' and valor > planejamento['gastos_variaveis'].iloc[0]:
+            st.error(f"⚠️ Este gasto variável excede o limite planejado de R$ {planejamento['gastos_variaveis'].iloc[0]:.2f}")
+            return
+    
+    # Criar novo gasto
+    novo_gasto = pd.DataFrame({
+        'data': [data],
+        'descricao': [descricao],
+        'valor': [valor],
+        'categoria': [categoria],
+        'tipo': [tipo]
+    })
+    
+    # Adicionar ao DataFrame existente
+    gastos = pd.concat([gastos, novo_gasto], ignore_index=True)
+    
+    # Salvar dados
+    save_data("gastos", gastos)
+    
+    # Mostrar mensagem de sucesso
+    st.success("✅ Gasto cadastrado com sucesso!")
+    
+    # Limpar formulário
+    st.session_state.descricao_gasto = ""
+    st.session_state.valor_gasto = 0.0
+    st.session_state.categoria_gasto = "🏠 Moradia"
+    st.session_state.data_gasto = datetime.now()
+    st.session_state.tipo_gasto = "fixo"
+    st.session_state.mostrar_form_gasto = False
+    
+    # Recarregar a página
+    st.rerun() 
