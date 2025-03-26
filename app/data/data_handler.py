@@ -1231,42 +1231,129 @@ def save_data(data_type, data):
     except Exception as e:
         print(f"Erro ao salvar {data_type}: {e}")
 
-# Também vamos adicionar uma função para recuperar os dados dos gastos
-def recuperar_gastos():
+# Função para normalizar os gastos existentes
+def normalizar_gastos_existentes():
     """
-    Tenta recuperar os gastos do arquivo gastos.json, independente de outros
-    estados do sistema.
+    Normaliza todos os gastos existentes, corrigindo os tipos para ficarem
+    no formato padronizado (fixo/variavel em minúsculas).
     
     Returns:
-        list: Lista de gastos recuperados ou lista vazia
+        bool: True se os gastos foram normalizados com sucesso
     """
     try:
-        # Tentar carregar do arquivo local sempre
-        if os.path.exists(GASTOS_FILE):
-            print(f"INFO: Tentando recuperar gastos do arquivo: {GASTOS_FILE}")
+        # Carregar todos os gastos
+        gastos = load_gastos()
+        
+        # Verificar se há gastos para normalizar
+        if not gastos:
+            return True
+            
+        # Normalizar os tipos dos gastos
+        modificados = False
+        for gasto in gastos:
+            if 'tipo' in gasto:
+                tipo_original = gasto['tipo']
+                
+                # Converter para minúscula
+                tipo_minusculo = tipo_original.lower()
+                
+                # Normalizar os valores
+                if tipo_minusculo in ['fixo', 'fíxo', 'fixado']:
+                    gasto['tipo'] = 'fixo'
+                    if tipo_original != 'fixo':
+                        modificados = True
+                elif tipo_minusculo in ['variável', 'variavel', 'variable', 'variável']:
+                    gasto['tipo'] = 'variavel'
+                    if tipo_original != 'variavel':
+                        modificados = True
+                        
+        # Se houve modificações, salvar os gastos atualizados
+        if modificados:
+            return save_gastos(gastos)
+            
+        return True
+    except Exception as e:
+        print(f"Erro ao normalizar gastos existentes: {e}")
+        return False
+
+def recuperar_gastos():
+    """
+    Tenta recuperar gastos de qualquer fonte disponível.
+    Função específica para casos em que a carga normal falhou.
+    
+    Returns:
+        list: Lista de gastos recuperados ou lista vazia se não encontrou dados
+    """
+    gastos = []
+    
+    # 1. Tentar arquivo principal
+    if os.path.exists(GASTOS_FILE):
+        try:
             with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
                 gastos = json.load(file)
-                st.session_state["gastos"] = gastos
-                print(f"INFO: {len(gastos)} gastos recuperados com sucesso!")
-                return gastos
-                
-        # Verificar arquivos de backup
+                if gastos:
+                    # Salvar na sessão
+                    st.session_state["gastos"] = gastos
+                    print(f"INFO: Recuperados {len(gastos)} gastos do arquivo principal")
+                    return gastos
+        except Exception as e:
+            print(f"ERRO ao recuperar gastos do arquivo principal: {e}")
+    
+    # 2. Buscar em qualquer arquivo com 'gasto' no nome
+    try:
+        data_files = [f for f in os.listdir(DATA_DIR) if f.endswith('.json') and 'gasto' in f.lower()]
+        for file in data_files:
+            try:
+                file_path = os.path.join(DATA_DIR, file)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if isinstance(data, list) and data:
+                        # Salvar na sessão e no arquivo principal para futura referência
+                        st.session_state["gastos"] = data
+                        try:
+                            with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
+                                json.dump(data, main_file, ensure_ascii=False, indent=2)
+                        except Exception:
+                            pass
+                        print(f"INFO: Recuperados {len(data)} gastos do arquivo alternativo {file}")
+                        return data
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"ERRO ao procurar arquivos alternativos: {e}")
+    
+    # 3. Verificar backups
+    try:
         backup_dir = DATA_DIR / "backups"
         if os.path.exists(backup_dir):
-            backups = sorted([d for d in os.listdir(backup_dir) if os.path.isdir(os.path.join(backup_dir, d))], reverse=True)
+            all_backup_files = []
+            # Coletar todos os possíveis arquivos de backup
+            for root, dirs, files in os.walk(backup_dir):
+                for file in files:
+                    if file.endswith('.json') and ('gasto' in file.lower() or file == 'gastos.json'):
+                        all_backup_files.append(os.path.join(root, file))
             
-            for backup in backups:
-                backup_file = os.path.join(backup_dir, backup, "gastos.json")
-                if os.path.exists(backup_file):
-                    print(f"INFO: Tentando recuperar gastos do backup: {backup_file}")
-                    with open(backup_file, 'r', encoding='utf-8') as file:
-                        gastos = json.load(file)
-                        st.session_state["gastos"] = gastos
-                        print(f"INFO: {len(gastos)} gastos recuperados do backup!")
-                        return gastos
+            # Ordenar do mais recente para o mais antigo (assumindo timestamp no nome)
+            all_backup_files.sort(reverse=True)
+            
+            # Tentar cada arquivo de backup
+            for backup_file in all_backup_files:
+                try:
+                    with open(backup_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if isinstance(data, list) and data:
+                            st.session_state["gastos"] = data
+                            try:
+                                with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
+                                    json.dump(data, main_file, ensure_ascii=False, indent=2)
+                            except Exception:
+                                pass
+                            print(f"INFO: Recuperados {len(data)} gastos do backup {backup_file}")
+                            return data
+                except Exception:
+                    continue
     except Exception as e:
-        print(f"ERRO ao tentar recuperar gastos: {e}")
-        import traceback
-        print(traceback.format_exc())
+        print(f"ERRO ao verificar backups: {e}")
     
+    print("AVISO: Não foi possível recuperar nenhum gasto de nenhuma fonte")
     return [] 
