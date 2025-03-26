@@ -658,25 +658,52 @@ def render_planejamento_page():
         # Fechando o grid
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Botão para ver todos os gastos em detalhe com estilo melhorado
+        # Abordagem melhorada: sobrepor o botão real ao botão visual
         st.markdown("""
-        <div class="details-button" onclick="document.getElementById('details-button').click()">
-            👁️ Ver todos os gastos detalhados
+        <style>
+        /* Estilo para o contêiner do botão */
+        .button-container {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            margin-top: 20px;
+        }
+        
+        /* Estilo para o botão visual (verde) */
+        .visual-button {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1;
+            pointer-events: none; /* Importante: desativa interações com este elemento */
+        }
+        
+        /* Fazer o botão do Streamlit ficar transparente mas ativo */
+        .stButton > button {
+            position: relative;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            color: transparent !important;
+            z-index: 2;
+        }
+        </style>
+        
+        <div class="button-container">
+            <div class="visual-button">👁️ Ver todos os gastos detalhados</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Botão invisível que será clicado pelo JavaScript
-        with st.container():
-            # Colocando o botão em um container escondido com CSS
-            st.markdown("""
-            <style>
-            [data-testid="stButton"] {
-                display: none;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
-                st.session_state.mostrar_detalhes_gastos = True
+        # Botão do Streamlit (agora transparente mas funcional)
+        if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
+            st.session_state.mostrar_detalhes_gastos = True
             
             # Mostrar detalhes completos se o botão foi clicado
             if st.session_state.get("mostrar_detalhes_gastos", False):
