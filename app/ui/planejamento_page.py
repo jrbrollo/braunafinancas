@@ -686,12 +686,16 @@ def render_planejamento_page():
             pointer-events: none; /* Importante: desativa interações com este elemento */
         }
         
-        /* Fazer o botão do Streamlit ficar transparente mas ativo */
-        .stButton > button {
+        /* Fazer o botão do Streamlit ficar completamente invisível mas ativo */
+        [data-testid="baseButton-secondary"] {
+            visibility: hidden !important;
+            height: 50px;
+        }
+        
+        /* Garantir que apenas este botão específico seja afetado */
+        #details-button button {
+            opacity: 0 !important;
             position: relative;
-            background-color: transparent !important;
-            border-color: transparent !important;
-            color: transparent !important;
             z-index: 2;
         }
         </style>
@@ -701,41 +705,45 @@ def render_planejamento_page():
         </div>
         """, unsafe_allow_html=True)
         
-        # Botão do Streamlit (agora transparente mas funcional)
-        if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
-            st.session_state.mostrar_detalhes_gastos = True
+        # Botão do Streamlit (agora invisível mas funcional)
+        # Com div específica para identificação
+        with st.container():
+            st.markdown('<div id="details-button">', unsafe_allow_html=True)
+            if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
+                st.session_state.mostrar_detalhes_gastos = True
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            # Mostrar detalhes completos se o botão foi clicado
-            if st.session_state.get("mostrar_detalhes_gastos", False):
-                # Criar tabs para separar fixos e variáveis
-                tab_fixos, tab_variaveis = st.tabs(["Gastos Fixos", "Gastos Variáveis"])
-                
-                with tab_fixos:
-                    if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
-                        gastos_fixos_df = gastos_mes[gastos_mes['tipo'] == 'fixo'].sort_values('valor', ascending=False)
-                        if not gastos_fixos_df.empty:
-                            # Preparar DataFrame para exibição
-                            display_df = gastos_fixos_df[['descricao', 'valor', 'categoria', 'data']].copy()
-                            display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
-                            st.dataframe(display_df, use_container_width=True)
-                        else:
-                            st.info("Não há gastos fixos registrados neste mês.")
-                
-                with tab_variaveis:
-                    if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
-                        gastos_variaveis_df = gastos_mes[gastos_mes['tipo'] == 'variavel'].sort_values('valor', ascending=False)
-                        if not gastos_variaveis_df.empty:
-                            # Preparar DataFrame para exibição
-                            display_df = gastos_variaveis_df[['descricao', 'valor', 'categoria', 'data']].copy()
-                            display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
-                            st.dataframe(display_df, use_container_width=True)
-                        else:
-                            st.info("Não há gastos variáveis registrados neste mês.")
-                
-                # Botão para fechar os detalhes
-                if st.button("Fechar detalhes", use_container_width=True):
-                    st.session_state.mostrar_detalhes_gastos = False
-                    st.rerun()
+        # Mostrar detalhes completos se o botão foi clicado
+        if st.session_state.get("mostrar_detalhes_gastos", False):
+            # Criar tabs para separar fixos e variáveis
+            tab_fixos, tab_variaveis = st.tabs(["Gastos Fixos", "Gastos Variáveis"])
+            
+            with tab_fixos:
+                if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                    gastos_fixos_df = gastos_mes[gastos_mes['tipo'] == 'fixo'].sort_values('valor', ascending=False)
+                    if not gastos_fixos_df.empty:
+                        # Preparar DataFrame para exibição
+                        display_df = gastos_fixos_df[['descricao', 'valor', 'categoria', 'data']].copy()
+                        display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
+                        st.dataframe(display_df, use_container_width=True)
+                    else:
+                        st.info("Não há gastos fixos registrados neste mês.")
+            
+            with tab_variaveis:
+                if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
+                    gastos_variaveis_df = gastos_mes[gastos_mes['tipo'] == 'variavel'].sort_values('valor', ascending=False)
+                    if not gastos_variaveis_df.empty:
+                        # Preparar DataFrame para exibição
+                        display_df = gastos_variaveis_df[['descricao', 'valor', 'categoria', 'data']].copy()
+                        display_df.columns = ['Descrição', 'Valor (R$)', 'Categoria', 'Data']
+                        st.dataframe(display_df, use_container_width=True)
+                    else:
+                        st.info("Não há gastos variáveis registrados neste mês.")
+            
+            # Botão para fechar os detalhes
+            if st.button("Fechar detalhes", use_container_width=True):
+                st.session_state.mostrar_detalhes_gastos = False
+                st.rerun()
     
     # Seção de histórico
     st.subheader("📊 Histórico de Planejamento")
