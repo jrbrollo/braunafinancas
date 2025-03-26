@@ -4,11 +4,11 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-# Adicionar o diretório pai ao path para poder importar módulos personalizados
+# Configurar o path para funcionar tanto localmente quanto no Streamlit Cloud
 current_dir = Path(__file__).parent
-parent_dir = current_dir.parent
-if str(parent_dir) not in sys.path:
-    sys.path.append(str(parent_dir))
+root_dir = current_dir.parent
+if str(root_dir) not in sys.path:
+    sys.path.append(str(root_dir))
 
 # Importar os módulos de UI
 from app.ui.dashboard_page import render_dashboard_page

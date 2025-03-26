@@ -7,9 +7,17 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import sys
+from pathlib import Path
+
+# Adicionar o diretório raiz ao path
+current_dir = Path(__file__).parent
+root_dir = current_dir.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.append(str(root_dir))
 
 # Importar funções de manipulação de dados
-from ..data.data_handler import (
+from app.data.data_handler import (
     load_user_data,
     load_gastos,
     save_gastos,
