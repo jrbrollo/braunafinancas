@@ -55,16 +55,50 @@ def load_custom_styles():
         # Adiciona um script para definir o atributo data-theme no elemento HTML
         st.markdown("""
             <script>
+                // Aplicar tema escuro
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.body.classList.add('dark-theme');
+                
+                // Aplicar tema escuro aos elementos do Streamlit
+                document.querySelectorAll('.stApp, .main, [data-testid="stAppViewContainer"]').forEach(el => {
+                    el.classList.add('dark-theme');
+                    el.setAttribute('data-theme', 'dark');
+                });
+                
+                // Aplicar tema escuro à barra lateral
+                document.querySelectorAll('[data-testid="stSidebar"]').forEach(el => {
+                    el.classList.add('dark-theme');
+                    el.setAttribute('data-theme', 'dark');
+                });
+                
+                // Forçar atualização de estilos
+                document.body.style.backgroundColor = '#121212';
+                document.body.style.color = '#E0E0E0';
             </script>
             """, unsafe_allow_html=True)
     else:
         # Remove o atributo data-theme para o modo claro
         st.markdown("""
             <script>
+                // Remover tema escuro
                 document.documentElement.removeAttribute('data-theme');
                 document.body.classList.remove('dark-theme');
+                
+                // Remover tema escuro dos elementos do Streamlit
+                document.querySelectorAll('.stApp, .main, [data-testid="stAppViewContainer"]').forEach(el => {
+                    el.classList.remove('dark-theme');
+                    el.removeAttribute('data-theme');
+                });
+                
+                // Remover tema escuro da barra lateral
+                document.querySelectorAll('[data-testid="stSidebar"]').forEach(el => {
+                    el.classList.remove('dark-theme');
+                    el.removeAttribute('data-theme');
+                });
+                
+                // Restaurar cores padrão
+                document.body.style.backgroundColor = '#FFFFFF';
+                document.body.style.color = '#333333';
             </script>
             """, unsafe_allow_html=True)
 
@@ -785,11 +819,45 @@ def toggle_tema(tema=None):
     st.markdown(f"""
         <script>
             if ("{st.session_state.tema}" === "escuro") {{
+                // Aplicar tema escuro
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.body.classList.add('dark-theme');
+                
+                // Aplicar tema escuro aos elementos do Streamlit
+                document.querySelectorAll('.stApp, .main, [data-testid="stAppViewContainer"]').forEach(el => {{
+                    el.classList.add('dark-theme');
+                    el.setAttribute('data-theme', 'dark');
+                }});
+                
+                // Aplicar tema escuro à barra lateral
+                document.querySelectorAll('[data-testid="stSidebar"]').forEach(el => {{
+                    el.classList.add('dark-theme');
+                    el.setAttribute('data-theme', 'dark');
+                }});
+                
+                // Forçar atualização de estilos
+                document.body.style.backgroundColor = '#121212';
+                document.body.style.color = '#E0E0E0';
             }} else {{
+                // Remover tema escuro
                 document.documentElement.removeAttribute('data-theme');
                 document.body.classList.remove('dark-theme');
+                
+                // Remover tema escuro dos elementos do Streamlit
+                document.querySelectorAll('.stApp, .main, [data-testid="stAppViewContainer"]').forEach(el => {{
+                    el.classList.remove('dark-theme');
+                    el.removeAttribute('data-theme');
+                }});
+                
+                // Remover tema escuro da barra lateral
+                document.querySelectorAll('[data-testid="stSidebar"]').forEach(el => {{
+                    el.classList.remove('dark-theme');
+                    el.removeAttribute('data-theme');
+                }});
+                
+                // Restaurar cores padrão
+                document.body.style.backgroundColor = '#FFFFFF';
+                document.body.style.color = '#333333';
             }}
         </script>
     """, unsafe_allow_html=True)

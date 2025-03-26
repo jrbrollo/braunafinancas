@@ -895,7 +895,9 @@ h3.card-title {
 
 /* Barra lateral no tema escuro */
 [data-theme="dark"] [data-testid="stSidebarContent"],
-.dark-theme [data-testid="stSidebarContent"] {
+[data-theme="dark"] [data-testid="stSidebar"],
+.dark-theme [data-testid="stSidebarContent"],
+.dark-theme [data-testid="stSidebar"] {
   background-color: var(--dark-secondary) !important;
   border-right: 1px solid var(--dark-border) !important;
   box-shadow: 2px 0 10px rgba(0,0,0,0.2) !important;
@@ -919,8 +921,10 @@ h3.card-title {
 /* Cards no tema escuro */
 [data-theme="dark"] .card,
 [data-theme="dark"] div.css-12w0qpk.e1f1d6gn1,
+[data-theme="dark"] div[data-testid="stHorizontalBlock"] > div,
 .dark-theme .card,
-.dark-theme div.css-12w0qpk.e1f1d6gn1 {
+.dark-theme div.css-12w0qpk.e1f1d6gn1,
+.dark-theme div[data-testid="stHorizontalBlock"] > div {
   background-color: var(--dark-card) !important;
   box-shadow: var(--dark-shadow) !important;
 }
@@ -947,9 +951,15 @@ h3.card-title {
 [data-theme="dark"] [data-baseweb="input"], 
 [data-theme="dark"] [data-baseweb="select"], 
 [data-theme="dark"] [data-baseweb="textarea"],
+[data-theme="dark"] .stTextInput > div > div > input,
+[data-theme="dark"] .stNumberInput > div > div > input,
+[data-theme="dark"] .stDateInput > div > div > input,
 .dark-theme [data-baseweb="input"], 
 .dark-theme [data-baseweb="select"], 
-.dark-theme [data-baseweb="textarea"] {
+.dark-theme [data-baseweb="textarea"],
+.dark-theme .stTextInput > div > div > input,
+.dark-theme .stNumberInput > div > div > input,
+.dark-theme .stDateInput > div > div > input {
   background-color: var(--dark-secondary) !important;
   color: var(--dark-text) !important;
   border-color: var(--dark-border) !important;
@@ -982,4 +992,52 @@ h3.card-title {
 [data-theme="dark"] table tr:hover,
 .dark-theme table tr:hover {
   background-color: rgba(42, 92, 170, 0.1) !important;
+}
+
+/* Ajustes específicos para o tema escuro */
+[data-theme="dark"] .stMarkdown,
+[data-theme="dark"] .stText,
+[data-theme="dark"] .stMarkdown p,
+[data-theme="dark"] .stText p,
+.dark-theme .stMarkdown,
+.dark-theme .stText,
+.dark-theme .stMarkdown p,
+.dark-theme .stText p {
+  color: var(--dark-text) !important;
+}
+
+[data-theme="dark"] .stSelectbox > div > div > div,
+[data-theme="dark"] .stMultiselect > div > div > div,
+.dark-theme .stSelectbox > div > div > div,
+.dark-theme .stMultiselect > div > div > div {
+  background-color: var(--dark-secondary) !important;
+  color: var(--dark-text) !important;
+  border-color: var(--dark-border) !important;
+}
+
+[data-theme="dark"] .stExpander,
+.dark-theme .stExpander {
+  background-color: var(--dark-card) !important;
+  border-color: var(--dark-border) !important;
+}
+
+[data-theme="dark"] .stExpander > div > div > div,
+.dark-theme .stExpander > div > div > div {
+  color: var(--dark-text) !important;
+}
+
+[data-theme="dark"] .stTabs [data-baseweb="tab-list"],
+.dark-theme .stTabs [data-baseweb="tab-list"] {
+  background-color: var(--dark-secondary) !important;
+}
+
+[data-theme="dark"] .stTabs [data-baseweb="tab"],
+.dark-theme .stTabs [data-baseweb="tab"] {
+  color: var(--dark-text) !important;
+}
+
+[data-theme="dark"] .stTabs [aria-selected="true"],
+.dark-theme .stTabs [aria-selected="true"] {
+  background-color: var(--primary) !important;
+  color: white !important;
 } 
