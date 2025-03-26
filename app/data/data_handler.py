@@ -919,4 +919,47 @@ def delete_divida(divida_id):
         return save_dividas(dividas)
     except Exception as e:
         print(f"Erro ao remover dívida: {e}")
-        return False 
+        return False
+
+def load_data(data_type):
+    """
+    Carrega dados de um tipo específico.
+    
+    Args:
+        data_type (str): Tipo de dados a carregar (ex: 'gastos', 'investimentos', etc.)
+        
+    Returns:
+        list: Lista de dados carregados ou lista vazia se não houver dados
+    """
+    if is_prod():
+        return st.session_state.get(data_type, [])
+    
+    file_path = DATA_DIR / f"{data_type}.json"
+    if not os.path.exists(file_path):
+        return []
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except Exception as e:
+        print(f"Erro ao carregar {data_type}: {e}")
+        return []
+
+def save_data(data_type, data):
+    """
+    Salva dados de um tipo específico.
+    
+    Args:
+        data_type (str): Tipo de dados a salvar (ex: 'gastos', 'investimentos', etc.)
+        data (list): Lista de dados a salvar
+    """
+    if is_prod():
+        st.session_state[data_type] = data
+        return
+    
+    file_path = DATA_DIR / f"{data_type}.json"
+    try:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Erro ao salvar {data_type}: {e}") 
