@@ -25,6 +25,7 @@ from app.ui.auth_page import render_auth_page, logout
 
 # Importar manipulação de dados
 from app.data.data_handler import load_config, save_config, initialize_data, ensure_data_dirs, load_gastos, save_gastos
+from app.data import init_data
 
 # Importar cliente Supabase
 from app.database.supabase_client import get_supabase_client, get_current_user
