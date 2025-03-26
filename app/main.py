@@ -729,7 +729,7 @@ def main():
     # Função para inicializar os dados
     init_app_data()
     
-    # Normalizar gastos existentes para garantir consistência
+    # Normalizar gastos para garantir consistência de tipos
     normalizar_gastos_existentes()
     
     # Configurar tema
@@ -916,7 +916,7 @@ def init_app_data():
         print("INFO: Dados já inicializados")
         
     # Normalizar gastos para garantir consistência de tipos
-    data_handler.normalizar_gastos_existentes()
+    normalizar_gastos_existentes()
 
 if __name__ == "__main__":
     main() 
