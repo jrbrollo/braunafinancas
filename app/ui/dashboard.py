@@ -61,8 +61,8 @@ def calcular_estatisticas():
     dividas_total = sum(d.get("valor_restante", 0) for d in dividas)
     
     # Gastos fixos e variáveis
-    gastos_fixos = sum(g.get("valor", 0) for g in gastos_mes if g.get("tipo") == "Fixo")
-    gastos_variaveis = sum(g.get("valor", 0) for g in gastos_mes if g.get("tipo") == "Variável")
+    gastos_fixos = sum(g.get("valor", 0) for g in gastos_mes if g.get("tipo", "").lower() == "fixo")
+    gastos_variaveis = sum(g.get("valor", 0) for g in gastos_mes if g.get("tipo", "").lower() == "variavel")
     
     return {
         "receita_total": receita_total,

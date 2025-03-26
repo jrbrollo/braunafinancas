@@ -144,22 +144,22 @@ def criar_grafico_tendencia_gastos(gastos, meses_anteriores):
     
     return fig
 
-def calcular_patrimonios(investimentos, dividas):
+def calcular_patrimonio():
     """
-    Calcula o patrimônio líquido com base nos investimentos e dívidas.
+    Calcula o patrimônio líquido do usuário.
     
-    Args:
-        investimentos (list): Lista de investimentos
-        dividas (list): Lista de dívidas
-        
     Returns:
-        tuple: (patrimônio bruto, total de dívidas, patrimônio líquido)
+        tuple: (patrimônio_bruto, total_dívidas, patrimônio_líquido)
     """
-    # Calcular patrimônio bruto (total dos investimentos)
-    patrimonio_bruto = sum(inv.get("valor_atual", 0) for inv in investimentos)
+    # Carregar dados
+    investimentos = load_investimentos()
+    dividas = load_dividas()
+    
+    # Calcular patrimônio bruto (soma de todos os investimentos)
+    patrimonio_bruto = sum(i.get("valor_atual", 0) for i in investimentos)
     
     # Calcular total de dívidas
-    total_dividas = sum(div.get("valor_atual", 0) for div in dividas)
+    total_dividas = sum(d.get("valor_restante", 0) for d in dividas)
     
     # Calcular patrimônio líquido
     patrimonio_liquido = patrimonio_bruto - total_dividas

@@ -261,7 +261,7 @@ def render_gastos_page():
                             "id": str(uuid.uuid4()),
                             "descricao": descricao,
                             "valor": valor,
-                            "categoria": categoria,
+                            "categoria": categoria,  # A categoria é sempre mantida conforme selecionada pelo usuário
                             "data": data.strftime("%Y-%m-%d"),
                             "tipo": tipo_final
                         }
