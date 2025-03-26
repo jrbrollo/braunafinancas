@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import uuid
+import os
 
 # Importar funções de manipulação de dados
 from app.data.data_handler import (
@@ -251,7 +252,9 @@ def render_dividas_page():
                     
                     # Adicionar à lista de dívidas
                     try:
-                        if add_divida(nova_divida):
+                        print(f"Enviando dívida para adicionar: {nova_divida}")
+                        resultado = add_divida(nova_divida)
+                        if resultado is True:
                             # Se configurado para registrar no controle de gastos
                             if registrar_gasto:
                                 try:
@@ -284,11 +287,50 @@ def render_dividas_page():
                             st.session_state.mostrar_form_divida = False
                             st.rerun()
                         else:
-                            st.error("Erro ao adicionar dívida. Verifique os dados informados.")
+                            # Exibir detalhes do erro de forma mais clara
+                            st.error("⚠️ Não foi possível adicionar a dívida")
+                            
+                            # Verificar campos obrigatórios e oferecer dicas
+                            campos_obrigatorios = ['descricao', 'valor_atual', 'tipo']
+                            campos_faltantes = [campo for campo in campos_obrigatorios if not nova_divida.get(campo)]
+                            
+                            if campos_faltantes:
+                                st.error(f"Campos obrigatórios não preenchidos: {', '.join(campos_faltantes)}")
+                            
+                            # Verificar diretório de dados
+                            data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+                            if not os.path.exists(data_dir):
+                                st.error(f"O diretório de dados não existe: {data_dir}")
+                                st.info("Tentando criar diretório...")
+                                try:
+                                    os.makedirs(data_dir, exist_ok=True)
+                                    st.success("Diretório criado com sucesso. Tente novamente.")
+                                except Exception as e:
+                                    st.error(f"Erro ao criar diretório: {str(e)}")
+                            
+                            # Tentar salvar diretamente para testar
+                            try:
+                                dividas = st.session_state.get("dividas", [])
+                                test_divida = nova_divida.copy()
+                                dividas_teste = dividas + [test_divida]
+                                if save_dividas(dividas_teste):
+                                    st.success("O teste de salvamento funcionou. Problema pode estar na função add_divida.")
+                                else:
+                                    st.error("Falha no teste de salvamento. Problema pode estar na função save_dividas.")
+                            except Exception as e:
+                                st.error(f"Erro ao testar salvamento: {str(e)}")
                     except Exception as e:
                         st.error(f"Erro ao adicionar dívida: {str(e)}")
                         import traceback
-                        st.error(traceback.format_exc())
+                        error_details = traceback.format_exc()
+                        st.error(f"Detalhes do erro:\n```\n{error_details}\n```")
+                        
+                        # Mostrar valores de sessão para debug
+                        st.warning("Informações para diagnóstico:")
+                        if "dividas" in st.session_state:
+                            st.info(f"Existem {len(st.session_state.dividas)} dívidas na sessão")
+                        else:
+                            st.info("Nenhuma dívida encontrada na sessão")
                 
             if cancel:
                 st.session_state.mostrar_form_divida = False
