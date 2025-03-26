@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import sys
 from pathlib import Path
+import uuid
 
 # Adicionar o diretório raiz ao path
 current_dir = Path(__file__).parent
@@ -153,7 +154,7 @@ def render_gastos_page():
                 # Data com linguagem simples
                 data = st.date_input("Quando foi?", value=datetime.now())
                 
-                # Simplificar categorias com imagens mais intuitivas
+                # Categorias com icones mais intuitivas
                 st.markdown("### Categoria")
                 categorias_com_icones = {
                     "🏠 Moradia": "Moradia", # Aluguel, contas de casa
@@ -193,10 +194,20 @@ def render_gastos_page():
                 
                 st.caption(dicas_categorias.get(categoria_selecionada, ""))
                 
-                # É um gasto fixo?
-                tipo = st.toggle("Este é um gasto que se repete todo mês?", value=False)
-                # Converter toggle para "Fixo" ou "Variável"
-                tipo = "Fixo" if tipo else "Variável"
+                # Adicionar informações sobre categorização automática
+                if categoria_selecionada == "🏠 Moradia":
+                    st.info("💡 Gastos de moradia são geralmente considerados fixos.")
+                elif categoria_selecionada == "📦 Outros":
+                    st.info("💡 Para gastos na categoria 'Outros', você pode escolher se é fixo ou variável.")
+                else:
+                    st.info("💡 Esta categoria é geralmente considerada como gasto variável.")
+                
+                # É um gasto fixo? Destacar para categoria "Outros"
+                if categoria_selecionada == "📦 Outros":
+                    st.markdown("### Este gasto se repete todos os meses?")
+                    gasto_recorrente = st.toggle("Marque se este é um gasto fixo mensal", value=False)
+                else:
+                    gasto_recorrente = st.toggle("Este é um gasto que se repete todo mês?", value=False)
                 
                 # Botões de ação
                 col_btn1, col_btn2 = st.columns(2)
@@ -206,14 +217,36 @@ def render_gastos_page():
                     cancel = st.form_submit_button("❌ Cancelar", use_container_width=True)
                 
                 if submitted:
-                    # Criar novo gasto
-                    novo_gasto = {
-                        "descricao": descricao,
-                        "valor": valor,
-                        "data": data.strftime("%Y-%m-%d"),
-                        "categoria": categoria,
-                        "tipo": tipo
-                    }
+                    # Validar campos obrigatórios
+                    if not descricao or valor <= 0:
+                        st.error("Por favor, preencha todos os campos corretamente.")
+                    else:
+                        # Determinar se é fixo ou variável usando a lógica híbrida
+                        categorias_fixas = ["Moradia"]
+                        categorias_variaveis = ["Alimentação", "Transporte", "Saúde", "Educação", 
+                                            "Lazer", "Vestuário", "Serviços"]
+                        
+                        # Se for marcado como recorrente, sempre é fixo
+                        if gasto_recorrente:
+                            tipo_final = "Fixo"
+                        else:
+                            # Se não for recorrente, seguir a regra da categoria
+                            if categoria in categorias_fixas:
+                                tipo_final = "Fixo"
+                            elif categoria in categorias_variaveis:
+                                tipo_final = "Variável"
+                            else:  # Para "Outros" ou categorias não listadas
+                                tipo_final = "Variável"  # Default para outros
+                
+                        # Criar o novo gasto
+                        novo_gasto = {
+                            "id": str(uuid.uuid4()),
+                            "descricao": descricao,
+                            "valor": valor,
+                            "categoria": categoria,
+                            "data": data.strftime("%Y-%m-%d"),
+                            "tipo": tipo_final
+                        }
                     
                     # Adicionar à lista
                     if add_gasto(novo_gasto):
@@ -1107,14 +1140,14 @@ def cadastrar_gasto():
     valor = st.session_state.valor_gasto
     categoria = st.session_state.categoria_gasto
     data = st.session_state.data_gasto
-    tipo = st.session_state.tipo_gasto
+    gasto_recorrente = st.session_state.gasto_recorrente
     
     # Validar se o valor não excede o planejamento
     if not planejamento.empty:
-        if tipo == 'fixo' and valor > planejamento['gastos_fixos'].iloc[0]:
+        if gasto_recorrente and valor > planejamento['gastos_fixos'].iloc[0]:
             st.error(f"⚠️ Este gasto fixo excede o limite planejado de R$ {planejamento['gastos_fixos'].iloc[0]:.2f}")
             return
-        elif tipo == 'variavel' and valor > planejamento['gastos_variaveis'].iloc[0]:
+        elif not gasto_recorrente and valor > planejamento['gastos_variaveis'].iloc[0]:
             st.error(f"⚠️ Este gasto variável excede o limite planejado de R$ {planejamento['gastos_variaveis'].iloc[0]:.2f}")
             return
     
@@ -1124,7 +1157,7 @@ def cadastrar_gasto():
         'descricao': [descricao],
         'valor': [valor],
         'categoria': [categoria],
-        'tipo': [tipo]
+        'tipo': ['Fixo' if gasto_recorrente else 'Variável']
     })
     
     # Adicionar ao DataFrame existente
@@ -1141,7 +1174,7 @@ def cadastrar_gasto():
     st.session_state.valor_gasto = 0.0
     st.session_state.categoria_gasto = "🏠 Moradia"
     st.session_state.data_gasto = datetime.now()
-    st.session_state.tipo_gasto = "fixo"
+    st.session_state.gasto_recorrente = False
     st.session_state.mostrar_form_gasto = False
     
     # Recarregar a página
