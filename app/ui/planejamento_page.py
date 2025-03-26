@@ -13,8 +13,12 @@ def render_planejamento_page():
     
     # Carregar dados
     dados_usuario = load_user_data()
-    gastos = pd.DataFrame(load_data("gastos"))
-    planejamento = pd.DataFrame(load_data("planejamento"))
+    gastos_lista = load_data("gastos")
+    planejamento_lista = load_data("planejamento")
+    
+    # Converter listas para DataFrames
+    gastos = pd.DataFrame(gastos_lista) if gastos_lista else pd.DataFrame()
+    planejamento = pd.DataFrame(planejamento_lista) if planejamento_lista else pd.DataFrame()
     
     # Se não houver renda cadastrada, mostrar mensagem
     if not dados_usuario or "renda_mensal" not in dados_usuario:
@@ -81,14 +85,20 @@ def render_planejamento_page():
             if st.button("💾 Salvar Planejamento", type="primary"):
                 # Criar ou atualizar planejamento
                 novo_planejamento = pd.DataFrame({
-                    'data': [datetime.now()],
+                    'data': [datetime.now().strftime("%Y-%m-%d")],
                     'renda_mensal': [renda_mensal],
                     'gastos_fixos': [gastos_fixos],
                     'gastos_variaveis': [gastos_variaveis],
                     'objetivos': [objetivos]
                 })
                 
-                save_data("planejamento", novo_planejamento.to_dict('records'))
+                # Se já existe planejamento, concatenar com o novo
+                if not planejamento.empty:
+                    planejamento_atualizado = pd.concat([planejamento, novo_planejamento], ignore_index=True)
+                else:
+                    planejamento_atualizado = novo_planejamento
+                
+                save_data("planejamento", planejamento_atualizado.to_dict('records'))
                 st.success("✅ Planejamento salvo com sucesso!")
                 st.rerun()
     
@@ -96,18 +106,54 @@ def render_planejamento_page():
         # Mostrar resumo do planejamento
         st.subheader("📈 Resumo do Planejamento")
         
+        # Verificar se existem dados de planejamento
         if not planejamento.empty:
+            # Converter string de data para objeto datetime nos gastos
+            if not gastos.empty and 'data' in gastos.columns:
+                if gastos['data'].dtype == 'object':
+                    gastos['data'] = pd.to_datetime(gastos['data'])
+            
             # Calcular gastos reais do mês atual
             hoje = datetime.now()
-            gastos_mes = gastos[gastos['data'].dt.month == hoje.month]
+            mes_atual = hoje.month
+            ano_atual = hoje.year
             
-            gastos_fixos_reais = gastos_mes[gastos_mes['tipo'] == 'fixo']['valor'].sum()
-            gastos_variaveis_reais = gastos_mes[gastos_mes['tipo'] == 'variavel']['valor'].sum()
+            # Filtrar gastos do mês atual - com mais segurança
+            if not gastos.empty and 'data' in gastos.columns:
+                try:
+                    # Tentar extrair mês e ano
+                    gastos_mes = gastos[
+                        (pd.to_datetime(gastos['data']).dt.month == mes_atual) & 
+                        (pd.to_datetime(gastos['data']).dt.year == ano_atual)
+                    ]
+                except Exception as e:
+                    st.error(f"Erro ao filtrar gastos: {e}")
+                    gastos_mes = pd.DataFrame()
+            else:
+                gastos_mes = pd.DataFrame()
+            
+            # Se houver gastos para o mês atual
+            if not gastos_mes.empty and 'tipo' in gastos_mes.columns and 'valor' in gastos_mes.columns:
+                # Converter tipo para minúsculas para evitar problemas de case
+                gastos_mes['tipo'] = gastos_mes['tipo'].str.lower()
+                
+                # Gastos reais
+                gastos_fixos_reais = gastos_mes[gastos_mes['tipo'] == 'fixo']['valor'].sum()
+                gastos_variaveis_reais = gastos_mes[gastos_mes['tipo'] == 'variavel']['valor'].sum()
+            else:
+                gastos_fixos_reais = 0
+                gastos_variaveis_reais = 0
+            
+            # Pegar último planejamento registrado
+            ultimo_planejamento = planejamento.iloc[-1]
+            gastos_fixos_plan = ultimo_planejamento['gastos_fixos']
+            gastos_variaveis_plan = ultimo_planejamento['gastos_variaveis']
+            objetivos_plan = ultimo_planejamento['objetivos']
             
             # Criar gráfico de pizza para planejamento
             fig_planejamento = go.Figure(data=[go.Pie(
                 labels=['Gastos Fixos', 'Gastos Variáveis', 'Objetivos'],
-                values=[gastos_fixos, gastos_variaveis, objetivos],
+                values=[gastos_fixos_plan, gastos_variaveis_plan, objetivos_plan],
                 hole=.3,
                 marker=dict(colors=['#2A5CAA', '#4CAF50', '#FFD700'])
             )])
@@ -120,21 +166,28 @@ def render_planejamento_page():
             
             st.plotly_chart(fig_planejamento, use_container_width=True)
             
-            # Mostrar progresso
+            # Mostrar progresso apenas se houver um planejamento definido
             st.subheader("🎯 Progresso do Mês")
             
             # Calcular percentuais
-            progresso_fixos = (gastos_fixos_reais / gastos_fixos) * 100
-            progresso_variaveis = (gastos_variaveis_reais / gastos_variaveis) * 100
+            if gastos_fixos_plan > 0:
+                progresso_fixos = (gastos_fixos_reais / gastos_fixos_plan) * 100
+            else:
+                progresso_fixos = 0
+                
+            if gastos_variaveis_plan > 0:
+                progresso_variaveis = (gastos_variaveis_reais / gastos_variaveis_plan) * 100
+            else:
+                progresso_variaveis = 0
             
             # Barras de progresso
             st.markdown("**Gastos Fixos**")
-            st.progress(min(progresso_fixos, 100) / 100)
-            st.markdown(f"R$ {gastos_fixos_reais:.2f} / R$ {gastos_fixos:.2f}")
+            st.progress(min(progresso_fixos / 100, 1.0))
+            st.markdown(f"R$ {gastos_fixos_reais:.2f} / R$ {gastos_fixos_plan:.2f}")
             
             st.markdown("**Gastos Variáveis**")
-            st.progress(min(progresso_variaveis, 100) / 100)
-            st.markdown(f"R$ {gastos_variaveis_reais:.2f} / R$ {gastos_variaveis:.2f}")
+            st.progress(min(progresso_variaveis / 100, 1.0))
+            st.markdown(f"R$ {gastos_variaveis_reais:.2f} / R$ {gastos_variaveis_plan:.2f}")
             
             # Alertas
             if progresso_fixos > 100:
@@ -154,6 +207,10 @@ def render_planejamento_page():
     st.subheader("📊 Histórico de Planejamento")
     
     if not planejamento.empty:
+        # Converter string de data para datetime
+        if 'data' in planejamento.columns and planejamento['data'].dtype == 'object':
+            planejamento['data'] = pd.to_datetime(planejamento['data'])
+        
         # Criar gráfico de linha para histórico
         fig_historico = go.Figure()
         
@@ -190,8 +247,13 @@ def render_planejamento_page():
         # Tabela com histórico
         st.markdown("**Histórico Detalhado**")
         historico_display = planejamento.copy()
-        historico_display['data'] = historico_display['data'].dt.strftime('%d/%m/%Y')
+        
+        if pd.api.types.is_datetime64_any_dtype(historico_display['data']):
+            historico_display['data'] = historico_display['data'].dt.strftime('%d/%m/%Y')
+        
+        # Renomear colunas para exibição
         historico_display.columns = ['Data', 'Renda Mensal', 'Gastos Fixos', 'Gastos Variáveis', 'Objetivos']
+        
         st.dataframe(historico_display, use_container_width=True)
     else:
         st.info("ℹ️ Nenhum histórico de planejamento disponível.") 
