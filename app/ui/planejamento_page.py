@@ -43,28 +43,34 @@ def render_planejamento_page():
             objetivos_atual = renda_mensal * 0.2
         
         # Campos do formulário
+        st.markdown("**Gastos Fixos (50% recomendado)**")
         gastos_fixos = st.number_input(
-            "Gastos Fixos (50% recomendado)",
+            "R$",
             min_value=0.0,
             max_value=renda_mensal,
             value=float(gastos_fixos_atual),
-            format="R$ %.2f"
+            format="%.2f",
+            key="gastos_fixos"
         )
         
+        st.markdown("**Gastos Variáveis (30% recomendado)**")
         gastos_variaveis = st.number_input(
-            "Gastos Variáveis (30% recomendado)",
+            "R$",
             min_value=0.0,
             max_value=renda_mensal,
             value=float(gastos_variaveis_atual),
-            format="R$ %.2f"
+            format="%.2f",
+            key="gastos_variaveis"
         )
         
+        st.markdown("**Objetivos/Poupança (20% recomendado)**")
         objetivos = st.number_input(
-            "Objetivos/Poupança (20% recomendado)",
+            "R$",
             min_value=0.0,
             max_value=renda_mensal,
             value=float(objetivos_atual),
-            format="R$ %.2f"
+            format="%.2f",
+            key="objetivos"
         )
         
         # Validar soma dos valores
