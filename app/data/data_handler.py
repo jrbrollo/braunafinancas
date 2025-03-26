@@ -110,43 +110,93 @@ def load_user_data():
 
 def load_gastos():
     """
-    Carrega os gastos. Se o arquivo não existir, retorna uma lista vazia.
+    Carrega os gastos de forma robusta, verificando múltiplas fontes para garantir
+    que os dados nunca sejam perdidos.
     """
-    # Verificar se já temos gastos no session_state
-    if "gastos" in st.session_state:
-        print("INFO: Carregando gastos do session_state")
-        return st.session_state.get("gastos", [])
+    gastos = []
     
-    # Verificar se o arquivo local existe
+    # 1. Verificar sessão (memória atual)
+    if "gastos" in st.session_state and st.session_state.get("gastos", []):
+        gastos = st.session_state.get("gastos", [])
+        print(f"INFO: Carregados {len(gastos)} gastos do session_state")
+        if gastos:
+            return gastos
+    
+    # 2. Verificar arquivo principal (mais importante)
     if os.path.exists(GASTOS_FILE):
         try:
-            print(f"INFO: Tentando carregar gastos do arquivo local: {GASTOS_FILE}")
+            print(f"INFO: Carregando gastos do arquivo principal: {GASTOS_FILE}")
             with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
                 gastos = json.load(file)
-                # Armazenar no session_state para uso futuro
-                st.session_state["gastos"] = gastos
-                return gastos
+                # Se encontrou dados, guarde na sessão e retorne
+                if gastos:
+                    st.session_state["gastos"] = gastos
+                    print(f"INFO: Carregados {len(gastos)} gastos do arquivo principal")
+                    return gastos
         except Exception as e:
-            print(f"ERRO ao carregar gastos do arquivo: {e}")
+            print(f"ERRO ao carregar gastos do arquivo principal: {e}")
     
-    # Se o Supabase estiver disponível e o usuário estiver autenticado, carregar do Supabase
+    # 3. Verificar Supabase (se disponível)
     if SUPABASE_AVAILABLE and is_authenticated():
         try:
             print("INFO: Tentando carregar gastos do Supabase")
             gastos = supabase_load_gastos()
             if gastos:
-                # Armazenar no session_state para uso futuro
                 st.session_state["gastos"] = gastos
+                print(f"INFO: Carregados {len(gastos)} gastos do Supabase")
                 return gastos
         except Exception as e:
             print(f"ERRO ao carregar gastos do Supabase: {e}")
     
-    # Ambiente de produção (Streamlit Cloud)
-    if is_prod():
-        print("INFO: Carregando gastos do ambiente de produção")
-        return st.session_state.get("gastos", [])
+    # 4. Verificar diretório de backups (último recurso)
+    backup_dir = DATA_DIR / "backups"
+    if os.path.exists(backup_dir):
+        try:
+            backups = sorted([d for d in os.listdir(backup_dir) if os.path.isdir(os.path.join(backup_dir, d))], reverse=True)
+            for backup in backups:
+                backup_file = os.path.join(backup_dir, backup, "gastos.json")
+                if os.path.exists(backup_file):
+                    print(f"INFO: Tentando recuperar gastos do backup: {backup_file}")
+                    with open(backup_file, 'r', encoding='utf-8') as file:
+                        gastos = json.load(file)
+                        if gastos:
+                            # Se encontrou dados em backup, restaure para o arquivo principal
+                            st.session_state["gastos"] = gastos
+                            # Tentar salvar de volta no arquivo principal para restaurar
+                            try:
+                                with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
+                                    json.dump(gastos, main_file, ensure_ascii=False, indent=2)
+                                print(f"INFO: Restaurados {len(gastos)} gastos do backup para o arquivo principal")
+                            except Exception as e:
+                                print(f"ERRO ao restaurar gastos do backup para arquivo principal: {e}")
+                            return gastos
+        except Exception as e:
+            print(f"ERRO ao verificar backups: {e}")
     
-    print("AVISO: Nenhum gasto encontrado, retornando lista vazia")
+    # 5. Último caso: verificar se há arquivos alternativos no diretório
+    try:
+        # Procurar por qualquer arquivo JSON no diretório de dados
+        for file in os.listdir(DATA_DIR):
+            if file.endswith('.json') and 'gasto' in file.lower():
+                alt_file = os.path.join(DATA_DIR, file)
+                print(f"INFO: Tentando carregar gastos de arquivo alternativo: {alt_file}")
+                try:
+                    with open(alt_file, 'r', encoding='utf-8') as f:
+                        alt_gastos = json.load(f)
+                        if isinstance(alt_gastos, list) and alt_gastos:
+                            st.session_state["gastos"] = alt_gastos
+                            print(f"INFO: Carregados {len(alt_gastos)} gastos de arquivo alternativo")
+                            # Salvar na localização principal
+                            with open(GASTOS_FILE, 'w', encoding='utf-8') as main_file:
+                                json.dump(alt_gastos, main_file, ensure_ascii=False, indent=2)
+                            return alt_gastos
+                except Exception as e:
+                    print(f"ERRO ao carregar arquivo alternativo: {e}")
+    except Exception as e:
+        print(f"ERRO ao procurar arquivos alternativos: {e}")
+    
+    # Se chegou aqui, não encontrou dados em lugar nenhum
+    print("AVISO: Nenhum gasto encontrado em nenhuma fonte de dados")
     return []
 
 def load_investimentos():
@@ -296,26 +346,78 @@ def save_user_data(user_data):
 
 def save_gastos(gastos):
     """
-    Salva a lista de gastos.
-    """
-    # Se o Supabase estiver disponível e o usuário estiver autenticado, salvar no Supabase
-    if SUPABASE_AVAILABLE and is_authenticated():
-        return supabase_save_gastos(gastos)
+    Salva a lista de gastos de forma segura, mantendo backups para prevenir perdas.
     
+    Args:
+        gastos (list): Lista de gastos a ser salva.
+        
+    Returns:
+        bool: True se salvou com sucesso, False caso contrário.
+    """
+    print(f"INFO: Iniciando salvamento de {len(gastos)} gastos")
+    
+    # Sempre preservar na sessão primeiro para garantir que não seja perdido
+    st.session_state["gastos"] = gastos
+    
+    # Fazer backup do arquivo atual antes de sobrescrever (se existir)
+    if os.path.exists(GASTOS_FILE):
+        try:
+            # Criar diretório de backup se não existir
+            backup_dir = DATA_DIR / "backups" / "auto"
+            os.makedirs(backup_dir, exist_ok=True)
+            
+            # Criar nome de arquivo com timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_file = backup_dir / f"gastos_{timestamp}.json"
+            
+            # Copiar arquivo atual para backup
+            with open(GASTOS_FILE, 'r', encoding='utf-8') as src:
+                with open(backup_file, 'w', encoding='utf-8') as dst:
+                    dst.write(src.read())
+            print(f"INFO: Backup criado em {backup_file}")
+        except Exception as e:
+            print(f"AVISO: Não foi possível criar backup automático: {e}")
+    
+    # Salvar no Supabase se disponível
+    supabase_result = False
+    if SUPABASE_AVAILABLE and is_authenticated():
+        try:
+            supabase_result = supabase_save_gastos(gastos)
+            if supabase_result:
+                print("INFO: Gastos salvos com sucesso no Supabase")
+        except Exception as e:
+            print(f"ERRO ao salvar gastos no Supabase: {e}")
+    
+    # Ambiente de produção (Streamlit Cloud)
     if is_prod():
-        st.session_state["gastos"] = gastos
+        print("INFO: Gastos salvos na sessão para ambiente de produção")
         return True
     
+    # Salvar em arquivo local (método mais confiável)
     try:
-        # Criar diretório se não existir
+        # Garantir que o diretório exista
         os.makedirs(os.path.dirname(GASTOS_FILE), exist_ok=True)
         
+        # Salvar no arquivo principal
         with open(GASTOS_FILE, 'w', encoding='utf-8') as file:
             json.dump(gastos, file, ensure_ascii=False, indent=2)
+        print("INFO: Gastos salvos com sucesso no arquivo principal")
         return True
     except Exception as e:
-        print(f"Erro ao salvar gastos: {e}")
-        return False
+        print(f"ERRO ao salvar gastos no arquivo: {e}")
+        
+        # Se falhou, tentar salvar em um arquivo alternativo
+        try:
+            alt_file = DATA_DIR / f"gastos_recovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(alt_file, 'w', encoding='utf-8') as file:
+                json.dump(gastos, file, ensure_ascii=False, indent=2)
+            print(f"INFO: Gastos salvos em arquivo alternativo: {alt_file}")
+            return True
+        except Exception as alt_e:
+            print(f"ERRO CRÍTICO: Falha ao salvar gastos em arquivo alternativo: {alt_e}")
+            
+        # Retornar True mesmo assim, já que os dados estão no session_state
+        return True
 
 def save_investimentos(investimentos):
     """

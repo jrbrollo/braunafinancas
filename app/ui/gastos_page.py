@@ -115,19 +115,19 @@ def render_gastos_page():
     # Importar a função para recuperar os gastos
     from app.data.data_handler import recuperar_gastos
     
-    # Verificar se precisamos recuperar os gastos
+    # Verificar e garantir que os gastos sejam carregados automaticamente
+    # Se a lista estiver vazia, tentar recuperar sem interação do usuário
     gastos = load_gastos()
-    
-    # Exibir opção para recuperar gastos se a lista estiver vazia
     if not gastos:
-        st.warning("⚠️ Não encontramos nenhum gasto cadastrado. Isso pode ser um erro técnico.")
-        if st.button("🔄 Tentar Recuperar Gastos", type="primary"):
-            gastos_recuperados = recuperar_gastos()
-            if gastos_recuperados:
-                st.success(f"✅ {len(gastos_recuperados)} gastos foram recuperados com sucesso!")
-                st.rerun()
-            else:
-                st.error("❌ Não foi possível recuperar os gastos. Os dados podem ter sido perdidos.")
+        print("ATENÇÃO: Lista de gastos vazia, tentando recuperação automática")
+        gastos = recuperar_gastos()
+        if gastos:
+            print(f"SUCESSO: {len(gastos)} gastos recuperados automaticamente")
+            # Notificação silenciosa - sem interromper fluxo, apenas para tranquilizar o usuário
+            st.sidebar.success(f"✅ {len(gastos)} gastos foram carregados com sucesso!", icon="✅")
+    elif len(gastos) > 0:
+        # Garantir que o usuário saiba que seus dados estão carregados
+        st.sidebar.info(f"📊 {len(gastos)} gastos carregados", icon="📊")
     
     # Cabeçalho moderno
     st.markdown("""
