@@ -726,8 +726,16 @@ def main():
     # Carregar configuração
     config = load_config()
     
-    # Função para inicializar os dados
-    init_app_data()
+    # Inicializar dados e definir a variável de dados inicializados
+    dados_inicializados = False
+    try:
+        # Função para inicializar os dados
+        init_app_data()
+        if not "initial_data_loaded" in st.session_state:
+            dados_inicializados = True
+    except Exception as e:
+        print(f"Erro ao inicializar dados: {e}")
+        dados_inicializados = False
     
     # Normalizar gastos para garantir consistência de tipos
     normalizar_gastos_existentes()
