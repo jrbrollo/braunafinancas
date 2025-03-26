@@ -11,10 +11,10 @@ def render_planejamento_page():
     """
     st.title("📊 Meu Planejamento")
     
-    # Carregar dados
-    renda = load_data("renda")
-    gastos = load_data("gastos")
-    planejamento = load_data("planejamento")
+    # Carregar dados e converter para DataFrame
+    renda = pd.DataFrame(load_data("renda"))
+    gastos = pd.DataFrame(load_data("gastos"))
+    planejamento = pd.DataFrame(load_data("planejamento"))
     
     # Se não houver renda cadastrada, mostrar mensagem
     if renda.empty:
@@ -82,7 +82,7 @@ def render_planejamento_page():
                     'objetivos': [objetivos]
                 })
                 
-                save_data("planejamento", novo_planejamento)
+                save_data("planejamento", novo_planejamento.to_dict('records'))
                 st.success("✅ Planejamento salvo com sucesso!")
                 st.rerun()
     
