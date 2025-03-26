@@ -77,71 +77,54 @@ def render_dividas_page():
         with st.form("form_nova_divida"):
             st.markdown("### Registre sua dívida")
             
-            # Informações básicas
-            descricao = st.text_input("Nome da dívida (ex: Cartão Nubank, Financiamento Carro)")
-            
-            # Tipo de dívida com ícones
-            st.markdown("### Tipo de dívida")
-            tipo_divida = st.radio(
-                "Selecione o tipo:",
-                options=[
-                    "💳 Cartão de Crédito",
-                    "🏦 Empréstimo",
-                    "🏠 Financiamento",
-                    "🧾 Conta a Pagar",
-                    "👤 Dívida Pessoal",
-                    "📦 Outra"
-                ],
-                horizontal=True,
-                format_func=lambda x: x.split(" ", 1)[1]  # Remove o emoji do display
-            )
-            
-            # Remover emoji para armazenar apenas o texto
-            tipo_divida_valor = tipo_divida.split(" ", 1)[1]
-            
-            # Dados básicos em colunas
+            # Campos principais em colunas
             col1, col2 = st.columns(2)
+            
             with col1:
-                valor_inicial = st.number_input(
-                    "Valor inicial (R$)",
+                descricao = st.text_input("Nome da dívida", 
+                                         placeholder="Ex: Cartão Nubank, Financiamento Carro",
+                                         help="Um nome para identificar facilmente esta dívida")
+                
+                # Tipo de dívida com ícones
+                tipo_divida = st.selectbox(
+                    "Tipo da dívida",
+                    options=[
+                        "💳 Cartão de Crédito",
+                        "🏦 Empréstimo",
+                        "🏠 Financiamento",
+                        "🧾 Conta a Pagar",
+                        "👤 Dívida Pessoal",
+                        "📦 Outra"
+                    ],
+                    help="Categoria da dívida"
+                )
+                
+                # Remover emoji para armazenar apenas o texto
+                tipo_divida_valor = tipo_divida.split(" ", 1)[1]
+                
+                credor = st.text_input(
+                    "Credor/Instituição",
+                    placeholder="Ex: Banco Itaú, Loja X, João",
+                    help="Nome do banco, loja ou pessoa para quem deve"
+                )
+            
+            with col2:
+                valor_atual = st.number_input(
+                    "Saldo restante a ser pago (R$)",
                     min_value=0.01,
                     step=100.0,
                     format="%.2f",
-                    help="Valor original da dívida quando foi contraída"
+                    help="Valor atual que resta para ser pago"
                 )
                 
-            with col2:
-                valor_atual = st.number_input(
-                    "Valor atual (R$)",
-                    min_value=0.0,
-                    value=valor_inicial,
-                    step=100.0,
+                valor_parcela = st.number_input(
+                    "Valor da parcela (R$)",
+                    min_value=0.01,
+                    step=50.0,
                     format="%.2f",
-                    help="Valor atual da dívida (após pagamentos parciais)"
+                    help="Quanto você paga em cada parcela"
                 )
-            
-            # Dados adicionais
-            st.markdown("### Detalhes adicionais")
-            
-            col3, col4 = st.columns(2)
-            
-            with col3:
-                data_inicio = st.date_input(
-                    "Data de início", 
-                    value=datetime.now(),
-                    help="Quando a dívida foi contraída"
-                )
-            
-            with col4:
-                data_vencimento = st.date_input(
-                    "Data de vencimento", 
-                    value=datetime.now() + timedelta(days=30),
-                    help="Quando a dívida deve ser paga"
-                )
-            
-            col5, col6 = st.columns(2)
-            
-            with col5:
+                
                 taxa_juros = st.number_input(
                     "Taxa de juros (% ao mês)",
                     min_value=0.0,
@@ -150,39 +133,80 @@ def render_dividas_page():
                     help="Taxa de juros mensal aplicada a esta dívida"
                 )
             
-            with col6:
-                parcelas = st.number_input(
+            # Segunda linha de campos
+            col3, col4 = st.columns(2)
+            
+            with col3:
+                parcelas_total = st.number_input(
                     "Número de parcelas",
                     min_value=1,
                     max_value=500,
                     value=1,
                     step=1,
-                    help="Quantidade total de parcelas (para dívidas parceladas)"
+                    help="Quantidade total de parcelas"
                 )
-            
-            col7, col8 = st.columns(2)
-            
-            with col7:
-                parcelas_pagas = st.number_input(
-                    "Parcelas já pagas",
-                    min_value=0,
-                    max_value=int(parcelas),
-                    value=0,
+                
+                parcela_atual = st.number_input(
+                    "Parcela atual",
+                    min_value=1,
+                    max_value=int(parcelas_total),
+                    value=1,
                     step=1,
-                    help="Quantas parcelas já foram pagas até agora"
+                    help="Qual parcela você está pagando agora"
                 )
+                
+                valor_inicial = valor_atual + (valor_parcela * (parcela_atual - 1))
             
-            with col8:
-                credor = st.text_input(
-                    "Credor/Instituição",
-                    help="Nome do banco, loja ou pessoa para quem deve"
+            with col4:
+                data_inicio = st.date_input(
+                    "Data de início", 
+                    value=datetime.now(),
+                    help="Quando a dívida foi contraída"
                 )
+                
+                data_vencimento = st.date_input(
+                    "Data de vencimento", 
+                    value=datetime.now() + timedelta(days=30),
+                    help="Próxima data de vencimento"
+                )
+                
+                # Calcular parcelas pagas
+                parcelas_pagas = parcela_atual - 1
             
+            # Observações
             detalhes = st.text_area(
                 "Observações",
                 placeholder="Informações adicionais sobre essa dívida...",
                 help="Detalhes que você queira lembrar sobre esta dívida"
             )
+            
+            # Opção para registrar automaticamente no controle de gastos
+            st.markdown("### Controle de gastos")
+            
+            registrar_gasto = st.checkbox(
+                "Registrar parcela automaticamente no controle de gastos",
+                value=True,
+                help="A parcela será adicionada automaticamente no controle de gastos"
+            )
+            
+            if registrar_gasto:
+                col_ga, col_gb = st.columns(2)
+                
+                with col_ga:
+                    gasto_categoria = st.selectbox(
+                        "Categoria do gasto",
+                        options=["Moradia", "Educação", "Saúde", "Transporte", "Serviços", "Outra"],
+                        help="Como este gasto será categorizado"
+                    )
+                
+                with col_gb:
+                    gasto_tipo = st.radio(
+                        "Tipo de gasto",
+                        options=["fixo", "variavel"],
+                        horizontal=True,
+                        format_func=lambda x: "Fixo" if x == "fixo" else "Variável",
+                        help="Se é um gasto fixo (ocorre todo mês) ou variável"
+                    )
             
             # Botões de ação
             col_btn1, col_btn2 = st.columns(2)
@@ -195,8 +219,10 @@ def render_dividas_page():
                 # Verificar se o nome foi preenchido
                 if not descricao:
                     st.error("Por favor, informe um nome para a dívida.")
-                elif valor_inicial <= 0:
-                    st.error("O valor inicial deve ser maior que zero.")
+                elif valor_atual <= 0:
+                    st.error("O valor restante deve ser maior que zero.")
+                elif valor_parcela <= 0:
+                    st.error("O valor da parcela deve ser maior que zero.")
                 else:
                     # Criar nova dívida
                     nova_divida = {
@@ -205,21 +231,45 @@ def render_dividas_page():
                         "tipo": tipo_divida_valor,
                         "valor_inicial": valor_inicial,
                         "valor_atual": valor_atual,
-                        "valor_total": valor_inicial,
-                        "valor_restante": valor_atual,
+                        "valor_parcela": valor_parcela,
                         "data_inicio": data_inicio.strftime("%Y-%m-%d"),
                         "data_vencimento": data_vencimento.strftime("%Y-%m-%d"),
                         "taxa_juros": taxa_juros,
-                        "parcelas": int(parcelas),
-                        "parcelas_total": int(parcelas),
+                        "parcelas_total": int(parcelas_total),
+                        "parcela_atual": int(parcela_atual),
                         "parcelas_pagas": int(parcelas_pagas),
                         "credor": credor,
-                        "detalhes": detalhes
+                        "detalhes": detalhes,
+                        "registrar_gasto": registrar_gasto
                     }
+                    
+                    # Adicionar informações de registro de gasto, se selecionado
+                    if registrar_gasto:
+                        nova_divida["gasto_categoria"] = gasto_categoria
+                        nova_divida["gasto_tipo"] = gasto_tipo
                     
                     # Adicionar à lista de dívidas
                     if add_divida(nova_divida):
-                        st.success("Dívida adicionada com sucesso!")
+                        # Se configurado para registrar no controle de gastos
+                        if registrar_gasto:
+                            from app.data.data_handler import add_gasto
+                            
+                            novo_gasto = {
+                                "descricao": f"Parcela {parcela_atual}/{parcelas_total} - {descricao}",
+                                "valor": valor_parcela,
+                                "data": data_vencimento.strftime("%Y-%m-%d"),
+                                "categoria": gasto_categoria,
+                                "tipo": gasto_tipo,
+                                "observacao": f"Gerado automaticamente do controle de dívidas - {credor}"
+                            }
+                            
+                            # Adicionar gasto
+                            add_gasto(novo_gasto)
+                            
+                            st.success("✅ Dívida adicionada com sucesso e parcela registrada no controle de gastos!")
+                        else:
+                            st.success("✅ Dívida adicionada com sucesso!")
+                            
                         st.session_state.mostrar_form_divida = False
                         st.rerun()
                     else:
