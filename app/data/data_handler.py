@@ -325,45 +325,82 @@ def save_dividas(dividas):
     Salva a lista de dívidas do usuário.
     
     Args:
-        dividas (list): Lista de dívidas a serem salvas.
+        dividas (list): Lista de dívidas a ser salva.
         
     Returns:
         bool: True se salvou com sucesso, False caso contrário.
     """
     try:
-        # Salvar no session state
-        st.session_state.dividas = dividas
+        print(f"Tentando salvar {len(dividas)} dívidas")
         
-        # Tentar salvar no Supabase
-        user = get_current_user()
-        if user:
-            cliente = get_supabase_client()
-            if cliente:
-                # Remover dados existentes
-                cliente.table('dividas').delete().eq('user_id', user['id']).execute()
+        # Verificar se estamos em ambiente de produção (Streamlit Cloud)
+        if is_prod():
+            # Salvar no session state do Streamlit
+            st.session_state.dividas = dividas
+            print("Dívidas salvas no session_state")
+            return True
+        
+        # Verificar se há dados de autenticação
+        user = get_current_user() if SUPABASE_AVAILABLE else None
+        
+        if user and SUPABASE_AVAILABLE:
+            # Salvar no Supabase
+            try:
+                cliente = get_supabase_client()
+                if not cliente:
+                    print("Cliente Supabase não disponível")
+                    return False
                 
-                # Inserir novos dados
-                if dividas:
-                    for divida in dividas:
-                        divida_supabase = divida.copy()
-                        divida_supabase['user_id'] = user['id']
-                        cliente.table('dividas').insert(divida_supabase).execute()
+                # Adicionar user_id a cada dívida
+                for divida in dividas:
+                    divida["user_id"] = user["id"]
                 
+                # Primeiro excluir todas as dívidas existentes do usuário
+                response = cliente.table('dividas').delete().eq('user_id', user['id']).execute()
+                
+                # Depois inserir as novas
+                if dividas:  # Verificar se a lista não está vazia
+                    response = cliente.table('dividas').insert(dividas).execute()
+                    if hasattr(response, 'error') and response.error:
+                        print(f"Erro ao salvar dívidas no Supabase: {response.error}")
+                        return False
+                
+                # Atualizar cache local
+                st.session_state.dividas = dividas
+                print("Dívidas salvas no Supabase")
                 return True
-        
-        # Salvar no arquivo local como fallback
-        user_id = st.session_state.get("user_id", "default")
-        arquivo = f"data/dividas_{user_id}.json"
-        
-        # Criar diretório se não existir
-        os.makedirs(os.path.dirname(arquivo), exist_ok=True)
-        
-        with open(arquivo, "w", encoding="utf-8") as f:
-            json.dump(dividas, f, ensure_ascii=False, indent=4)
-        
-        return True
+            except Exception as e:
+                print(f"Erro ao salvar dívidas no Supabase: {e}")
+                import traceback
+                print(traceback.format_exc())
+                return False
+        else:
+            # Salvar em arquivo local
+            try:
+                # Definir o caminho do arquivo baseado no ID do usuário
+                user_id = st.session_state.get("user_id", "default")
+                arquivo = f"data/dividas_{user_id}.json"
+                
+                # Garantir que o diretório exista
+                os.makedirs(os.path.dirname(arquivo), exist_ok=True)
+                
+                # Salvar o arquivo
+                with open(arquivo, "w", encoding="utf-8") as f:
+                    json.dump(dividas, f, ensure_ascii=False, indent=2)
+                
+                # Atualizar cache local
+                st.session_state.dividas = dividas
+                print(f"Dívidas salvas no arquivo: {arquivo}")
+                return True
+            except Exception as e:
+                print(f"Erro ao salvar dívidas em arquivo: {e}")
+                import traceback
+                print(traceback.format_exc())
+                return False
     except Exception as e:
-        print(f"Erro ao salvar dívidas: {e}")
+        print(f"Erro geral ao salvar dívidas: {e}")
+        import traceback
+        print(traceback.format_exc())
         return False
 
 def save_seguros(seguros):
@@ -566,9 +603,18 @@ def add_divida(divida):
         bool: True se adicionou com sucesso, False caso contrário.
     """
     try:
+        print(f"Iniciando adição de dívida: {divida}")
         # Validar campos obrigatórios
+        campos_obrigatorios = ['descricao', 'valor_atual', 'tipo']
+        campos_faltantes = [campo for campo in campos_obrigatorios if campo not in divida]
+        
+        if campos_faltantes:
+            print(f"Erro: campos obrigatórios ausentes na dívida: {campos_faltantes}")
+            return False
+        
+        # Validação do DATA_MAPPER se disponível    
         if DATA_MAPPER_AVAILABLE and not validar_campos_obrigatorios(divida, 'dividas'):
-            print("Erro: campos obrigatórios ausentes na dívida")
+            print("Erro: campos obrigatórios ausentes na dívida (DATA_MAPPER)")
             return False
             
         # Normalizar dados para garantir compatibilidade
@@ -592,10 +638,20 @@ def add_divida(divida):
         # Adicionar nova dívida
         dividas.append(divida)
         
+        # Imprimir informação antes de salvar
+        print(f"Tentando salvar lista de dívidas com {len(dividas)} itens")
+        
         # Salvar lista atualizada
-        return save_dividas(dividas)
+        resultado = save_dividas(dividas)
+        if resultado:
+            print("Dívida adicionada com sucesso")
+        else:
+            print("Falha ao salvar a lista de dívidas")
+        return resultado
     except Exception as e:
+        import traceback
         print(f"Erro ao adicionar dívida: {e}")
+        print(traceback.format_exc())
         return False
 
 def add_objetivo(objetivo):

@@ -14,7 +14,8 @@ from app.data.data_handler import (
     load_dividas,
     save_dividas,
     add_divida,
-    delete_divida
+    delete_divida,
+    add_gasto
 )
 
 def formatar_moeda(valor):
@@ -249,31 +250,45 @@ def render_dividas_page():
                         nova_divida["gasto_tipo"] = gasto_tipo
                     
                     # Adicionar à lista de dívidas
-                    if add_divida(nova_divida):
-                        # Se configurado para registrar no controle de gastos
-                        if registrar_gasto:
-                            from app.data.data_handler import add_gasto
-                            
-                            novo_gasto = {
-                                "descricao": f"Parcela {parcela_atual}/{parcelas_total} - {descricao}",
-                                "valor": valor_parcela,
-                                "data": data_vencimento.strftime("%Y-%m-%d"),
-                                "categoria": gasto_categoria,
-                                "tipo": gasto_tipo,
-                                "observacao": f"Gerado automaticamente do controle de dívidas - {credor}"
-                            }
-                            
-                            # Adicionar gasto
-                            add_gasto(novo_gasto)
-                            
-                            st.success("✅ Dívida adicionada com sucesso e parcela registrada no controle de gastos!")
+                    try:
+                        if add_divida(nova_divida):
+                            # Se configurado para registrar no controle de gastos
+                            if registrar_gasto:
+                                try:
+                                    novo_gasto = {
+                                        "descricao": f"Parcela {parcela_atual}/{parcelas_total} - {descricao}",
+                                        "valor": valor_parcela,
+                                        "data": data_vencimento.strftime("%Y-%m-%d"),
+                                        "categoria": gasto_categoria,
+                                        "tipo": gasto_tipo,
+                                        "observacoes": f"Gerado automaticamente do controle de dívidas - {credor}",
+                                        "id": str(uuid.uuid4())  # Adicionando ID para evitar problemas
+                                    }
+                                    
+                                    # Verificar campos necessários
+                                    print(f"Tentando adicionar gasto: {novo_gasto}")
+                                    
+                                    # Adicionar gasto
+                                    resultado_gasto = add_gasto(novo_gasto)
+                                    
+                                    if resultado_gasto:
+                                        st.success("✅ Dívida adicionada com sucesso e parcela registrada no controle de gastos!")
+                                    else:
+                                        st.warning("✅ Dívida adicionada com sucesso, mas houve um erro ao registrar a parcela no controle de gastos.")
+                                        
+                                except Exception as e:
+                                    st.warning(f"✅ Dívida adicionada com sucesso, mas houve um erro ao registrar a parcela no controle de gastos: {str(e)}")
+                            else:
+                                st.success("✅ Dívida adicionada com sucesso!")
+                                
+                            st.session_state.mostrar_form_divida = False
+                            st.rerun()
                         else:
-                            st.success("✅ Dívida adicionada com sucesso!")
-                            
-                        st.session_state.mostrar_form_divida = False
-                        st.rerun()
-                    else:
-                        st.error("Erro ao adicionar dívida.")
+                            st.error("Erro ao adicionar dívida. Verifique os dados informados.")
+                    except Exception as e:
+                        st.error(f"Erro ao adicionar dívida: {str(e)}")
+                        import traceback
+                        st.error(traceback.format_exc())
                 
             if cancel:
                 st.session_state.mostrar_form_divida = False
