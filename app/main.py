@@ -23,7 +23,7 @@ from app.ui.planejamento_page import render_planejamento_page
 from app.ui.auth_page import render_auth_page, logout
 
 # Importar manipulação de dados
-from app.data.data_handler import load_config, save_config, initialize_data, ensure_data_dirs
+from app.data.data_handler import load_config, save_config, initialize_data, ensure_data_dirs, normalizar_gastos_existentes
 
 # Importar cliente Supabase
 from app.database.supabase_client import get_supabase_client, get_current_user
@@ -720,6 +720,9 @@ def main():
     
     # Carregar configuração
     config = load_config()
+    
+    # Normalizar gastos existentes para garantir consistência
+    normalizar_gastos_existentes()
     
     # Configurar tema
     if "tema" not in st.session_state:

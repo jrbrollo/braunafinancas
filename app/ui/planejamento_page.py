@@ -22,6 +22,20 @@ def render_planejamento_page():
         st.write("Dados do usuário:", dados_usuario)
         st.write("Lista de gastos:", gastos_lista[:5] if gastos_lista else "Sem gastos")
         st.write("Planejamento:", planejamento_lista)
+        
+        # Debug detalhado dos tipos dos gastos
+        if gastos_lista:
+            tipos_encontrados = [g.get('tipo', 'sem_tipo') for g in gastos_lista]
+            contagem_tipos = {}
+            for tipo in tipos_encontrados:
+                if tipo in contagem_tipos:
+                    contagem_tipos[tipo] += 1
+                else:
+                    contagem_tipos[tipo] = 1
+            
+            st.write("Tipos de gastos encontrados na lista:")
+            for tipo, contagem in contagem_tipos.items():
+                st.write(f"- '{tipo}': {contagem} gastos")
     
     # Converter listas para DataFrames
     gastos = pd.DataFrame(gastos_lista) if gastos_lista else pd.DataFrame()

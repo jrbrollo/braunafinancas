@@ -962,6 +962,18 @@ def save_data(data_type, data):
         data_type (str): Tipo de dados a salvar (ex: 'gastos', 'investimentos', etc.)
         data (list): Lista de dados a salvar
     """
+    # Normalizar os tipos dos gastos se for tipo 'gastos'
+    if data_type == 'gastos':
+        # Garantir que os tipos estejam em minúsculas
+        for item in data:
+            if 'tipo' in item:
+                item['tipo'] = item['tipo'].lower()
+                # Padronizar valores
+                if item['tipo'] in ['fixo', 'fíxo', 'fixado']:
+                    item['tipo'] = 'fixo'
+                elif item['tipo'] in ['variável', 'variavel', 'variable']:
+                    item['tipo'] = 'variavel'
+    
     if is_prod():
         st.session_state[data_type] = data
         return
@@ -971,4 +983,48 @@ def save_data(data_type, data):
         with open(file_path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Erro ao salvar {data_type}: {e}") 
+        print(f"Erro ao salvar {data_type}: {e}")
+
+def normalizar_gastos_existentes():
+    """
+    Normaliza todos os gastos existentes, corrigindo os tipos para ficarem
+    no formato padronizado (fixo/variavel em minúsculas).
+    
+    Returns:
+        bool: True se os gastos foram normalizados com sucesso
+    """
+    try:
+        # Carregar todos os gastos
+        gastos = load_gastos()
+        
+        # Verificar se há gastos para normalizar
+        if not gastos:
+            return True
+            
+        # Normalizar os tipos dos gastos
+        modificados = False
+        for gasto in gastos:
+            if 'tipo' in gasto:
+                tipo_original = gasto['tipo']
+                
+                # Converter para minúscula
+                tipo_minusculo = tipo_original.lower()
+                
+                # Normalizar os valores
+                if tipo_minusculo in ['fixo', 'fíxo', 'fixado']:
+                    gasto['tipo'] = 'fixo'
+                    if tipo_original != 'fixo':
+                        modificados = True
+                elif tipo_minusculo in ['variável', 'variavel', 'variable', 'variável']:
+                    gasto['tipo'] = 'variavel'
+                    if tipo_original != 'variavel':
+                        modificados = True
+                        
+        # Se houve modificações, salvar os gastos atualizados
+        if modificados:
+            return save_gastos(gastos)
+            
+        return True
+    except Exception as e:
+        print(f"Erro ao normalizar gastos existentes: {e}")
+        return False 
