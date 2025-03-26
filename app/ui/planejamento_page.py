@@ -229,36 +229,94 @@ def render_planejamento_page():
         <style>
         .main-header {
             text-align: center;
-            padding: 10px 0;
-            margin: 20px 0;
-            font-size: 24px;
+            padding: 15px 0;
+            margin: 25px 0;
+            font-size: 28px;
             font-weight: bold;
-            border-bottom: 2px solid #4CAF50;
-            color: #2E7D32;
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
         .progress-container {
-            background-color: var(--background-secondary, #f8f9fa);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .progress-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
         .progress-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+        .progress-title {
+            font-size: 20px;
             font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .progress-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            background-color: rgba(0,0,0,0.03);
+            padding: 5px 10px;
+            border-radius: 50px;
         }
         .progress-detail {
-            margin-top: 5px;
-            font-size: 0.9em;
-            color: var(--text-color-secondary);
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: rgba(0,0,0,0.02);
+            border-left: 4px solid #4CAF50;
+        }
+        .progress-detail-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(0,0,0,0.1);
+        }
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+        .progress-item-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .progress-item-value {
+            font-weight: bold;
         }
         .alert-box {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .alert-warning {
             background-color: #FFF3CD;
@@ -278,7 +336,85 @@ def render_planejamento_page():
         .progress-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 25px;
+        }
+        .progress-circle-container {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .progress-circle {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        .progress-circle-fill {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        .progress-circle-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .summary-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .summary-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .details-button {
+            text-align: center;
+            cursor: pointer;
+            padding: 12px;
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .details-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
         }
         @media (max-width: 768px) {
             .progress-grid {
@@ -301,99 +437,236 @@ def render_planejamento_page():
             progresso_variaveis = (gastos_variaveis_reais / gastos_variaveis_plan) * 100
         else:
             progresso_variaveis = 0
+            
+        # Calcular valores para cartão de resumo
+        gasto_total = gastos_fixos_reais + gastos_variaveis_reais
+        orcamento_total = gastos_fixos_plan + gastos_variaveis_plan
+        percentual_total = (gasto_total / orcamento_total * 100) if orcamento_total > 0 else 0
+        
+        # Cartão de resumo geral
+        st.markdown(f"""
+        <div class="summary-card">
+            <div class="summary-title">Total Gasto no Mês</div>
+            <div class="summary-value">R$ {gasto_total:.2f}</div>
+            <div class="summary-subtitle">de R$ {orcamento_total:.2f} planejados ({percentual_total:.1f}%)</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Grid de 2 colunas para os cartões de progresso
         st.markdown('<div class="progress-grid">', unsafe_allow_html=True)
         
         # Seção de Gastos Fixos com detalhamento
         st.markdown('<div class="progress-container">', unsafe_allow_html=True)
-        st.markdown('<div class="progress-header"><span>Gastos Fixos</span><span>R$ {:.2f} / R$ {:.2f}</span></div>'.format(
-            gastos_fixos_reais, gastos_fixos_plan
-        ), unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="progress-header">
+            <div class="progress-title">
+                <span>🏠</span> Gastos Fixos
+            </div>
+            <div class="progress-value">
+                R$ {gastos_fixos_reais:.2f} / R$ {gastos_fixos_plan:.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Barra de progresso com cores diferentes baseadas no progresso
-        progresso_fixos_normalizado = min(progresso_fixos / 100, 1.0)
-        cor_barra_fixos = "#4CAF50"  # Verde por padrão
+        # Determinar cor baseada no progresso
         if progresso_fixos > 100:
-            cor_barra_fixos = "#DC3545"  # Vermelho se ultrapassou
+            cor_progresso = "#DC3545"  # Vermelho
+            status_emoji = "⚠️"
         elif progresso_fixos > 80:
-            cor_barra_fixos = "#FFC107"  # Amarelo se próximo do limite
+            cor_progresso = "#FFC107"  # Amarelo
+            status_emoji = "⚡"
+        else:
+            cor_progresso = "#28A745"  # Verde
+            status_emoji = "✅"
             
-        st.progress(progresso_fixos_normalizado, text=f"{progresso_fixos:.1f}%")
+        # Círculo de progresso
+        st.markdown(f"""
+        <div class="progress-circle-container">
+            <div class="progress-circle">
+                <svg class="progress-circle-bar" viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="{cor_progresso}"
+                        stroke-width="3"
+                        stroke-dasharray="{min(progresso_fixos, 100)}, 100"
+                        transform="rotate(-90, 18, 18)"
+                    />
+                </svg>
+                <div class="progress-circle-fill">
+                    {status_emoji} {progresso_fixos:.1f}%
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Barra de progresso padrão
+        progresso_fixos_normalizado = min(progresso_fixos / 100, 1.0)
+        st.progress(progresso_fixos_normalizado)
         
         # Listar gastos fixos se houver
         if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
             gastos_fixos_lista = gastos_mes[gastos_mes['tipo'] == 'fixo'].sort_values('valor', ascending=False)
             if not gastos_fixos_lista.empty:
                 st.markdown('<div class="progress-detail">', unsafe_allow_html=True)
-                st.markdown('**Principais gastos fixos:**', unsafe_allow_html=True)
+                st.markdown('<div class="progress-detail-title"><span>📋</span> Principais gastos fixos:</div>', unsafe_allow_html=True)
                 
                 for i, (_, row) in enumerate(gastos_fixos_lista.iterrows()):
                     if i < 5:  # Mostrar apenas os 5 principais para não sobrecarregar
-                        st.markdown(f"• {row.get('descricao', 'Sem descrição')}: R$ {row['valor']:.2f} ({row.get('categoria', 'Sem categoria')})", unsafe_allow_html=True)
+                        categoria = row.get('categoria', 'Sem categoria')
+                        # Escolher emoji baseado na categoria
+                        if categoria.lower() == 'moradia':
+                            emoji = '🏠'
+                        elif categoria.lower() == 'transporte':
+                            emoji = '🚗'
+                        elif categoria.lower() == 'saúde' or categoria.lower() == 'saude':
+                            emoji = '💊'
+                        elif categoria.lower() == 'educação' or categoria.lower() == 'educacao':
+                            emoji = '📚'
+                        elif categoria.lower() == 'serviços' or categoria.lower() == 'servicos':
+                            emoji = '💼'
+                        else:
+                            emoji = '💰'
+                            
+                        st.markdown(f"""
+                        <div class="progress-item">
+                            <div class="progress-item-name">
+                                <span>{emoji}</span> {row.get('descricao', 'Sem descrição')}
+                            </div>
+                            <div class="progress-item-value">
+                                R$ {row['valor']:.2f}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 if len(gastos_fixos_lista) > 5:
-                    st.markdown(f"• ... e mais {len(gastos_fixos_lista) - 5} gastos", unsafe_allow_html=True)
+                    st.markdown(f'<div class="progress-item"><em>... e mais {len(gastos_fixos_lista) - 5} gastos</em></div>', unsafe_allow_html=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
         
         # Alertas para gastos fixos
         if progresso_fixos > 100:
-            st.markdown('<div class="alert-box alert-danger">⚠️ Você ultrapassou o limite planejado para gastos fixos!</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-danger"><span>⚠️</span> Você ultrapassou o limite planejado para gastos fixos!</div>', unsafe_allow_html=True)
         elif progresso_fixos > 80:
-            st.markdown('<div class="alert-box alert-warning">💡 Você está próximo do limite de gastos fixos. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-warning"><span>💡</span> Você está próximo do limite de gastos fixos. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="alert-box alert-success">✅ Seus gastos fixos estão dentro do planejado!</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-success"><span>✅</span> Seus gastos fixos estão dentro do planejado!</div>', unsafe_allow_html=True)
             
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Seção de Gastos Variáveis com detalhamento
         st.markdown('<div class="progress-container">', unsafe_allow_html=True)
-        st.markdown('<div class="progress-header"><span>Gastos Variáveis</span><span>R$ {:.2f} / R$ {:.2f}</span></div>'.format(
-            gastos_variaveis_reais, gastos_variaveis_plan
-        ), unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="progress-header">
+            <div class="progress-title">
+                <span>🛒</span> Gastos Variáveis
+            </div>
+            <div class="progress-value">
+                R$ {gastos_variaveis_reais:.2f} / R$ {gastos_variaveis_plan:.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Barra de progresso com cores diferentes baseadas no progresso
-        progresso_variaveis_normalizado = min(progresso_variaveis / 100, 1.0)
-        cor_barra_variaveis = "#4CAF50"  # Verde por padrão
+        # Determinar cor baseada no progresso
         if progresso_variaveis > 100:
-            cor_barra_variaveis = "#DC3545"  # Vermelho se ultrapassou
+            cor_progresso = "#DC3545"  # Vermelho
+            status_emoji = "⚠️"
         elif progresso_variaveis > 80:
-            cor_barra_variaveis = "#FFC107"  # Amarelo se próximo do limite
+            cor_progresso = "#FFC107"  # Amarelo
+            status_emoji = "⚡"
+        else:
+            cor_progresso = "#28A745"  # Verde
+            status_emoji = "✅"
             
-        st.progress(progresso_variaveis_normalizado, text=f"{progresso_variaveis:.1f}%")
+        # Círculo de progresso
+        st.markdown(f"""
+        <div class="progress-circle-container">
+            <div class="progress-circle">
+                <svg class="progress-circle-bar" viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="{cor_progresso}"
+                        stroke-width="3"
+                        stroke-dasharray="{min(progresso_variaveis, 100)}, 100"
+                        transform="rotate(-90, 18, 18)"
+                    />
+                </svg>
+                <div class="progress-circle-fill">
+                    {status_emoji} {progresso_variaveis:.1f}%
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Barra de progresso padrão
+        progresso_variaveis_normalizado = min(progresso_variaveis / 100, 1.0)
+        st.progress(progresso_variaveis_normalizado)
         
         # Listar gastos variáveis se houver
         if not gastos_mes.empty and 'tipo' in gastos_mes.columns:
             gastos_variaveis_lista = gastos_mes[gastos_mes['tipo'] == 'variavel'].sort_values('valor', ascending=False)
             if not gastos_variaveis_lista.empty:
                 st.markdown('<div class="progress-detail">', unsafe_allow_html=True)
-                st.markdown('**Principais gastos variáveis:**', unsafe_allow_html=True)
+                st.markdown('<div class="progress-detail-title"><span>📋</span> Principais gastos variáveis:</div>', unsafe_allow_html=True)
                 
                 for i, (_, row) in enumerate(gastos_variaveis_lista.iterrows()):
                     if i < 5:  # Mostrar apenas os 5 principais para não sobrecarregar
-                        st.markdown(f"• {row.get('descricao', 'Sem descrição')}: R$ {row['valor']:.2f} ({row.get('categoria', 'Sem categoria')})", unsafe_allow_html=True)
+                        categoria = row.get('categoria', 'Sem categoria')
+                        # Escolher emoji baseado na categoria
+                        if categoria.lower() == 'alimentação' or categoria.lower() == 'alimentacao':
+                            emoji = '🍔'
+                        elif categoria.lower() == 'lazer':
+                            emoji = '🎮'
+                        elif categoria.lower() == 'vestuário' or categoria.lower() == 'vestuario':
+                            emoji = '👕'
+                        elif categoria.lower() == 'compras':
+                            emoji = '🛍️'
+                        elif categoria.lower() == 'outros':
+                            emoji = '📦'
+                        else:
+                            emoji = '💸'
+                            
+                        st.markdown(f"""
+                        <div class="progress-item">
+                            <div class="progress-item-name">
+                                <span>{emoji}</span> {row.get('descricao', 'Sem descrição')}
+                            </div>
+                            <div class="progress-item-value">
+                                R$ {row['valor']:.2f}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 if len(gastos_variaveis_lista) > 5:
-                    st.markdown(f"• ... e mais {len(gastos_variaveis_lista) - 5} gastos", unsafe_allow_html=True)
+                    st.markdown(f'<div class="progress-item"><em>... e mais {len(gastos_variaveis_lista) - 5} gastos</em></div>', unsafe_allow_html=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
         
-        # Alertas para gastos variáveis - corrigida a lógica para não mostrar dois alertas
+        # Alertas para gastos variáveis
         if progresso_variaveis > 100:
-            st.markdown('<div class="alert-box alert-danger">⚠️ Você ultrapassou o limite planejado para gastos variáveis!</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-danger"><span>⚠️</span> Você ultrapassou o limite planejado para gastos variáveis!</div>', unsafe_allow_html=True)
         elif progresso_variaveis > 80:
-            st.markdown('<div class="alert-box alert-warning">💡 Você está próximo do limite de gastos variáveis. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-warning"><span>💡</span> Você está próximo do limite de gastos variáveis. Considere revisar seus gastos.</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="alert-box alert-success">✅ Seus gastos variáveis estão dentro do planejado!</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-box alert-success"><span>✅</span> Seus gastos variáveis estão dentro do planejado!</div>', unsafe_allow_html=True)
             
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Fechando o grid
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Botão para ver todos os gastos em detalhe
-        if st.button("Ver todos os gastos detalhados", use_container_width=True):
+        # Botão para ver todos os gastos em detalhe com estilo melhorado
+        st.markdown("""
+        <div class="details-button" onclick="document.getElementById('details-button').click()">
+            👁️ Ver todos os gastos detalhados
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Botão invisível que será clicado pelo JavaScript
+        if st.button("Ver todos os gastos detalhados", key="details-button", use_container_width=True, type="primary"):
             st.session_state.mostrar_detalhes_gastos = True
             
         # Mostrar detalhes completos se o botão foi clicado
