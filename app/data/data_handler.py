@@ -112,22 +112,42 @@ def load_gastos():
     """
     Carrega os gastos. Se o arquivo não existir, retorna uma lista vazia.
     """
-    # Se o Supabase estiver disponível e o usuário estiver autenticado, carregar do Supabase
-    if SUPABASE_AVAILABLE and is_authenticated():
-        return supabase_load_gastos()
-    
-    if is_prod():
+    # Verificar se já temos gastos no session_state
+    if "gastos" in st.session_state:
+        print("INFO: Carregando gastos do session_state")
         return st.session_state.get("gastos", [])
     
-    if not os.path.exists(GASTOS_FILE):
-        return []
+    # Verificar se o arquivo local existe
+    if os.path.exists(GASTOS_FILE):
+        try:
+            print(f"INFO: Tentando carregar gastos do arquivo local: {GASTOS_FILE}")
+            with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
+                gastos = json.load(file)
+                # Armazenar no session_state para uso futuro
+                st.session_state["gastos"] = gastos
+                return gastos
+        except Exception as e:
+            print(f"ERRO ao carregar gastos do arquivo: {e}")
     
-    try:
-        with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    except Exception as e:
-        print(f"Erro ao carregar gastos: {e}")
-        return []
+    # Se o Supabase estiver disponível e o usuário estiver autenticado, carregar do Supabase
+    if SUPABASE_AVAILABLE and is_authenticated():
+        try:
+            print("INFO: Tentando carregar gastos do Supabase")
+            gastos = supabase_load_gastos()
+            if gastos:
+                # Armazenar no session_state para uso futuro
+                st.session_state["gastos"] = gastos
+                return gastos
+        except Exception as e:
+            print(f"ERRO ao carregar gastos do Supabase: {e}")
+    
+    # Ambiente de produção (Streamlit Cloud)
+    if is_prod():
+        print("INFO: Carregando gastos do ambiente de produção")
+        return st.session_state.get("gastos", [])
+    
+    print("AVISO: Nenhum gasto encontrado, retornando lista vazia")
+    return []
 
 def load_investimentos():
     """
@@ -1061,4 +1081,44 @@ def save_data(data_type, data):
         with open(file_path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Erro ao salvar {data_type}: {e}") 
+        print(f"Erro ao salvar {data_type}: {e}")
+
+# Também vamos adicionar uma função para recuperar os dados dos gastos
+def recuperar_gastos():
+    """
+    Tenta recuperar os gastos do arquivo gastos.json, independente de outros
+    estados do sistema.
+    
+    Returns:
+        list: Lista de gastos recuperados ou lista vazia
+    """
+    try:
+        # Tentar carregar do arquivo local sempre
+        if os.path.exists(GASTOS_FILE):
+            print(f"INFO: Tentando recuperar gastos do arquivo: {GASTOS_FILE}")
+            with open(GASTOS_FILE, 'r', encoding='utf-8') as file:
+                gastos = json.load(file)
+                st.session_state["gastos"] = gastos
+                print(f"INFO: {len(gastos)} gastos recuperados com sucesso!")
+                return gastos
+                
+        # Verificar arquivos de backup
+        backup_dir = DATA_DIR / "backups"
+        if os.path.exists(backup_dir):
+            backups = sorted([d for d in os.listdir(backup_dir) if os.path.isdir(os.path.join(backup_dir, d))], reverse=True)
+            
+            for backup in backups:
+                backup_file = os.path.join(backup_dir, backup, "gastos.json")
+                if os.path.exists(backup_file):
+                    print(f"INFO: Tentando recuperar gastos do backup: {backup_file}")
+                    with open(backup_file, 'r', encoding='utf-8') as file:
+                        gastos = json.load(file)
+                        st.session_state["gastos"] = gastos
+                        print(f"INFO: {len(gastos)} gastos recuperados do backup!")
+                        return gastos
+    except Exception as e:
+        print(f"ERRO ao tentar recuperar gastos: {e}")
+        import traceback
+        print(traceback.format_exc())
+    
+    return [] 

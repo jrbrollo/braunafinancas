@@ -24,7 +24,8 @@ from app.data.data_handler import (
     save_gastos,
     add_gasto,
     load_data,
-    save_data
+    save_data,
+    recuperar_gastos
 )
 
 def calcular_total_gastos_por_semana(gastos, mes):
@@ -111,6 +112,23 @@ def render_gastos_page():
     """
     Renderiza a página de Controle de Gastos.
     """
+    # Importar a função para recuperar os gastos
+    from app.data.data_handler import recuperar_gastos
+    
+    # Verificar se precisamos recuperar os gastos
+    gastos = load_gastos()
+    
+    # Exibir opção para recuperar gastos se a lista estiver vazia
+    if not gastos:
+        st.warning("⚠️ Não encontramos nenhum gasto cadastrado. Isso pode ser um erro técnico.")
+        if st.button("🔄 Tentar Recuperar Gastos", type="primary"):
+            gastos_recuperados = recuperar_gastos()
+            if gastos_recuperados:
+                st.success(f"✅ {len(gastos_recuperados)} gastos foram recuperados com sucesso!")
+                st.rerun()
+            else:
+                st.error("❌ Não foi possível recuperar os gastos. Os dados podem ter sido perdidos.")
+    
     # Cabeçalho moderno
     st.markdown("""
     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
